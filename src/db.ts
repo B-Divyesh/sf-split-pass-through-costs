@@ -1,90 +1,21 @@
-import type { Slip } from './types';
-
-const DB_NAME = 'split-cost-slip';
-const DB_VERSION = 1;
-const SLIPS = 'slips';
-const FILES = 'attachments';
-
-function requestResult<T>(request: IDBRequest<T>): Promise<T> {
-  return new Promise((resolve, reject) => {
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-function openDatabase(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(SLIPS)) db.createObjectStore(SLIPS, { keyPath: 'id' });
-      if (!db.objectStoreNames.contains(FILES)) db.createObjectStore(FILES);
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-export async function listSlips(): Promise<Slip[]> {
-  const db = await openDatabase();
-  const result = await requestResult(db.transaction(SLIPS).objectStore(SLIPS).getAll()) as Slip[];
-  db.close();
-  return result.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-}
-
-export async function getSlip(id: string): Promise<Slip | undefined> {
-  const db = await openDatabase();
-  const result = await requestResult(db.transaction(SLIPS).objectStore(SLIPS).get(id)) as Slip | undefined;
-  db.close();
-  return result;
-}
-
-export async function putSlip(slip: Slip): Promise<void> {
-  const db = await openDatabase();
-  await requestResult(db.transaction(SLIPS, 'readwrite').objectStore(SLIPS).put(slip));
-  db.close();
-}
-
-export async function deleteSlip(id: string): Promise<void> {
-  const db = await openDatabase();
-  const tx = db.transaction([SLIPS, FILES], 'readwrite');
-  tx.objectStore(SLIPS).delete(id);
-  tx.objectStore(FILES).delete(id);
-  await new Promise<void>((resolve, reject) => {
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-  db.close();
-}
-
-export async function putAttachment(id: string, file: File): Promise<void> {
-  const db = await openDatabase();
-  await requestResult(db.transaction(FILES, 'readwrite').objectStore(FILES).put(file, id));
-  db.close();
-}
-
-export async function getAttachment(id: string): Promise<Blob | undefined> {
-  const db = await openDatabase();
-  const result = await requestResult(db.transaction(FILES).objectStore(FILES).get(id)) as Blob | undefined;
-  db.close();
-  return result;
-}
-
-export async function exportBackup(): Promise<string> {
-  return JSON.stringify({ format: 'split-cost-slip', version: 1, exportedAt: new Date().toISOString(), slips: await listSlips() }, null, 2);
-}
-
-export async function importBackup(raw: string): Promise<number> {
-  const parsed = JSON.parse(raw) as { format?: string; version?: number; slips?: unknown };
-  if (parsed.format !== 'split-cost-slip' || parsed.version !== 1 || !Array.isArray(parsed.slips)) {
-    throw new Error('This is not a Split Cost Slip backup.');
-  }
-  let count = 0;
-  for (const candidate of parsed.slips) {
-    const slip = candidate as Partial<Slip>;
-    if (!slip.id || !Array.isArray(slip.allocations) || typeof slip.totalCents !== 'number') continue;
-    await putSlip(slip as Slip);
-    count += 1;
-  }
-  return count;
-}
+import type { Allocation, AttachmentMeta, Currency, Slip } from './types';
+const DB_BASE = 'split-cost-slip', DB_VERSION = 1, SLIPS = 'slips', FILES = 'attachments'; let demoMode = false;
+export function setStorageMode(demo: boolean): void { demoMode = demo; }
+export function storageNamespace(): string { return demoMode ? 'demo:split-cost-slip' : 'split-cost-slip'; }
+const dbName = () => demoMode ? `${DB_BASE}:demo` : DB_BASE;
+const requestResult = <T>(request: IDBRequest<T>): Promise<T> => new Promise((resolve, reject) => { request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
+const transactionDone = (tx: IDBTransaction): Promise<void> => new Promise((resolve, reject) => { tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error); });
+function openDatabase(): Promise<IDBDatabase> { return new Promise((resolve, reject) => { const request = indexedDB.open(dbName(), DB_VERSION); request.onupgradeneeded = () => { const db = request.result; if (!db.objectStoreNames.contains(SLIPS)) db.createObjectStore(SLIPS, { keyPath: 'id' }); if (!db.objectStoreNames.contains(FILES)) db.createObjectStore(FILES); }; request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); }); }
+const currencies: Currency[] = ['USD', 'GBP', 'EUR', 'CAD', 'AUD', 'INR']; const isText = (value: unknown): value is string => typeof value === 'string'; const isCents = (value: unknown): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
+function validAttachment(value: unknown): value is AttachmentMeta | undefined { if (value === undefined) return true; if (!value || typeof value !== 'object') return false; const file = value as Partial<AttachmentMeta>; return isText(file.name) && isText(file.type) && isCents(file.size) && file.size <= 10_000_000; }
+function validAllocation(value: unknown): value is Allocation { if (!value || typeof value !== 'object') return false; const row = value as Partial<Allocation>; return isText(row.id) && isText(row.description) && isText(row.category) && isCents(row.amountCents) && typeof row.billable === 'boolean'; }
+export function isSlip(value: unknown): value is Slip { if (!value || typeof value !== 'object') return false; const slip = value as Partial<Slip>; return isText(slip.id) && isText(slip.supplier) && isText(slip.reference) && isText(slip.client) && isText(slip.billDate) && currencies.includes(slip.currency as Currency) && isCents(slip.totalCents) && isText(slip.notes) && Array.isArray(slip.allocations) && slip.allocations.every(validAllocation) && isText(slip.createdAt) && isText(slip.updatedAt) && validAttachment(slip.attachment); }
+export async function listSlips(): Promise<Slip[]> { const db = await openDatabase(); const tx = db.transaction(SLIPS, 'readwrite'); const records = await requestResult(tx.objectStore(SLIPS).getAll()); const slips: Slip[] = []; for (const record of records) { if (isSlip(record)) slips.push(record); else if (record && typeof record === 'object' && isText((record as { id?: unknown }).id)) tx.objectStore(SLIPS).delete((record as { id: string }).id); } await transactionDone(tx); db.close(); return slips.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)); }
+export async function getSlip(id: string): Promise<Slip | undefined> { const db = await openDatabase(); const result = await requestResult(db.transaction(SLIPS).objectStore(SLIPS).get(id)); db.close(); return isSlip(result) ? result : undefined; }
+export async function putSlip(slip: Slip): Promise<void> { if (!isSlip(slip)) throw new Error('This slip is incomplete. Check every required field.'); const db = await openDatabase(); const tx = db.transaction(SLIPS, 'readwrite'); tx.objectStore(SLIPS).put(structuredClone(slip)); await transactionDone(tx); db.close(); }
+export async function deleteSlip(id: string): Promise<void> { const db = await openDatabase(); const tx = db.transaction([SLIPS, FILES], 'readwrite'); tx.objectStore(SLIPS).delete(id); tx.objectStore(FILES).delete(id); await transactionDone(tx); db.close(); }
+export async function putAttachment(id: string, file: File): Promise<void> { const db = await openDatabase(); const tx = db.transaction(FILES, 'readwrite'); tx.objectStore(FILES).put(file, id); await transactionDone(tx); db.close(); }
+export async function getAttachment(id: string): Promise<Blob | undefined> { const db = await openDatabase(); const result = await requestResult(db.transaction(FILES).objectStore(FILES).get(id)) as Blob | undefined; db.close(); return result; }
+export async function exportBackup(): Promise<string> { return JSON.stringify({ format: 'split-cost-slip', version: 1, exportedAt: new Date().toISOString(), slips: await listSlips() }, null, 2); }
+export async function importBackup(raw: string): Promise<number> { let parsed: { format?: unknown; version?: unknown; slips?: unknown }; try { parsed = JSON.parse(raw) as typeof parsed; } catch { throw new Error('This backup is not valid JSON.'); } if (parsed.format !== 'split-cost-slip' || parsed.version !== 1 || !Array.isArray(parsed.slips) || !parsed.slips.every(isSlip)) throw new Error('This backup has missing or invalid slip details. Nothing was imported.'); const db = await openDatabase(); const tx = db.transaction(SLIPS, 'readwrite'); parsed.slips.forEach((slip) => tx.objectStore(SLIPS).put(structuredClone(slip))); await transactionDone(tx); db.close(); return parsed.slips.length; }
+export async function resetDemoStorage(): Promise<void> { if (!demoMode) throw new Error('Demo storage can only be reset in demo mode.'); await new Promise<void>((resolve, reject) => { const request = indexedDB.deleteDatabase(dbName()); request.onsuccess = () => resolve(); request.onerror = () => reject(request.error); request.onblocked = () => resolve(); }); }

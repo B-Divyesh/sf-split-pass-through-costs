@@ -1,0 +1,8 @@
+[
+  {"id":"demo-isolation","claim":"The demo opens a seeded sample and never reads or writes real slips.","where":"Demo banner, README","test":"npm run test:claims -- --grep @claim:demo-isolation","sandbox":"fresh browser context; save a real slip, enter /demo, reset demo, and return to real mode"},
+  {"id":"split-export","claim":"Exports each balanced cost row with its billable or overhead choice.","where":"Export section, README","test":"npm run test:claims -- --grep @claim:split-export","sandbox":"fresh /demo; download CSV and inspect all sample rows"},
+  {"id":"attachment-boundary","claim":"Stores image and PDF attachments up to 10 MB in this browser.","where":"Attachment help, README","test":"npm run test:claims -- --grep @claim:attachment-boundary","sandbox":"fresh /demo; attach 10,000,000-byte PDF, reload, then reject 10,000,001-byte PDF"},
+  {"id":"local-privacy","claim":"The complete demo flow sends no cross-origin request.","where":"Privacy section, README","test":"npm run test:claims -- --grep @claim:local-privacy","sandbox":"fresh /demo; save and export while recording every request"},
+  {"id":"offline-reload","claim":"Works offline after the first visit.","where":"First-screen fact, README","test":"npm run test:claims -- --grep @claim:offline-reload","sandbox":"fresh /demo; wait for service worker, set browser offline, reload"},
+  {"id":"free-core","claim":"Saving and exports are available without a license.","where":"First-screen fact, README","test":"npm run test:claims -- --grep @claim:free-core","sandbox":"fresh /demo; assert save and export controls work without a license or paywall"}
+]

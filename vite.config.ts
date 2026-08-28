@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config';
+import { resolve } from 'node:path';
 
 export default defineConfig({
   test: {
@@ -9,8 +10,9 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
     rollupOptions: {
+      input: { main: resolve(__dirname, 'index.html'), demo: resolve(__dirname, 'demo/index.html') },
       output: {
-        entryFileNames: 'assets/app.js',
+        entryFileNames: 'assets/[name].js',
         assetFileNames: (assetInfo) => assetInfo.names.some((name) => name.endsWith('.css')) ? 'assets/app.css' : 'assets/[name]-[hash][extname]',
       },
     },
