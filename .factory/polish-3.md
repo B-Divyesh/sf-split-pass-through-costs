@@ -2,7 +2,7 @@
 
 Repaired from candidate `352fc98c021ce1c3cc2d3cf5884412bcca73cf3c` and adversarial report `48e537a5bdff6ed54cedbc938dcbba4a2f460552`.
 
-Evidence key: browser tests are in `tests/app.spec.ts`; current local screenshots are `.factory/evidence/polish-3/root-desktop.png`, `.factory/evidence/polish-3/root-mobile.png`, `.factory/evidence/polish-3/demo-mobile.png`, and `.factory/evidence/polish-3/extraction-mobile.png`. Post-deploy verification is recorded in `.factory/evidence/polish-3/live/`; the live URL for each listed route is `https://split-pass-through-costs.sociobot.in` plus its shown path.
+Evidence key: browser tests are in `tests/app.spec.ts`; current local screenshots are `.factory/evidence/polish-3/root-desktop.png`, `.factory/evidence/polish-3/root-mobile.png`, `.factory/evidence/polish-3/demo-mobile.png`, and `.factory/evidence/polish-3/extraction-mobile.png`. Live root screenshots/report are `/tmp/split-polish3-live-verify.PI6WeP/`; the live URL for each listed route is `https://split-pass-through-costs.sociobot.in` plus its shown path.
 
 ## Review 3
 
@@ -115,4 +115,4 @@ Evidence key: browser tests are in `tests/app.spec.ts`; current local screenshot
 | F-1-63 | README test wording is plain and short. | copy audit |
 | F-1-64 | README product introduction avoids implementation/accounting jargon. | copy audit |
 
-No finding is deferred. The live status column is completed after the deployment check in the final handoff.
+No finding is deferred. Live checks passed after deployment: root 200/no console errors, root and demo metadata, `?demo=1` isolation/banner/recorded extraction, 404 status/focus, Privacy wording, 390px target sizing, hashed-asset cache headers, and zero serious/critical Axe findings on root, demo, Privacy, Terms, and 404.
