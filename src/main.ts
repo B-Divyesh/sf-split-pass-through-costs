@@ -204,7 +204,8 @@ function renderRows(): void {
     amount.addEventListener('input', () => {
       const parsed = parseMoney(amount.value);
       amount.setAttribute('aria-invalid', String(parsed === null && amount.value !== ''));
-      if (parsed !== null) row.amountCents = parsed;
+      if (amount.value === '') row.amountCents = 0;
+      else if (parsed !== null) row.amountCents = parsed;
       changed();
     });
     wrapper.querySelector<HTMLButtonElement>('.remove-row')!.addEventListener('click', () => removeRow(index));
@@ -356,7 +357,9 @@ function wireEvents(): void {
   input<HTMLSelectElement>('currency').addEventListener('change', (event) => { current.currency = (event.target as HTMLSelectElement).value as Currency; changed(); });
   input<HTMLInputElement>('bill-total').addEventListener('input', (event) => {
     const field = event.target as HTMLInputElement; const parsed = parseMoney(field.value); field.setAttribute('aria-invalid', String(parsed === null && field.value !== ''));
-    if (parsed !== null) current.totalCents = parsed; changed();
+    if (field.value === '') current.totalCents = 0;
+    else if (parsed !== null) current.totalCents = parsed;
+    changed();
   });
   input('add-row').addEventListener('click', () => { current.allocations.push(newRow()); renderRows(); changed(); document.querySelector<HTMLInputElement>('.allocation-row:last-child .row-description')?.focus(); });
   input('save-slip').addEventListener('click', () => void saveCurrent());
@@ -385,7 +388,7 @@ async function handleAttachment(file?: File): Promise<void> {
   current.attachment = { name: file.name, type: file.type, size: file.size };
   input('attachment-name').textContent = `${file.name} · ${formatBytes(file.size)}`;
   input<HTMLButtonElement>('view-attachment').hidden = false;
-  changed(); showToast('Source bill attached locally.');
+  changed(); await saveCurrent(true); showToast('Source bill attached locally.');
 }
 
 async function viewAttachment(): Promise<void> {
@@ -439,10 +442,16 @@ async function registerServiceWorker(): Promise<void> {
 }
 
 async function init(): Promise<void> {
-  license = await loadLicense(); shell(); wireEvents();
-  try { saved = await listSlips(); if (saved[0]) current = saved[0]; }
+  const licensePromise = loadLicense();
+  shell(); wireEvents();
+  try { saved = await listSlips(); if (saved[0] && !new URL(location.href).searchParams.has('new')) current = saved[0]; }
   catch { showToast('Local storage could not be opened. Check private browsing or storage permissions.'); }
   fillForm(); renderSaved(); updateConnection(); void registerServiceWorker();
+  license = await licensePromise;
+  input('pro-open').textContent = license.pro ? 'Pro unlocked' : 'Unlock Pro';
+  input<HTMLButtonElement>('remove-license').hidden = !license.token;
+  input('license-notice').textContent = license.notice;
+  renderSaved();
 }
 
 void init();

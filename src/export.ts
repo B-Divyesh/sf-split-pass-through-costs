@@ -8,10 +8,10 @@ function safeCell(value: string): string {
 export function slipCsv(slip: Slip): string {
   const header = ['Supplier', 'Bill reference', 'Bill date', 'Client', 'Description', 'User-selected category', 'Treatment', 'Amount', 'Currency'];
   const rows = slip.allocations.map((row) => [
-    slip.supplier,
-    slip.reference,
+    safeCell(slip.supplier),
+    safeCell(slip.reference),
     slip.billDate,
-    slip.client,
+    safeCell(slip.client),
     safeCell(row.description),
     safeCell(row.category),
     row.billable ? 'Billable' : 'Overhead',
