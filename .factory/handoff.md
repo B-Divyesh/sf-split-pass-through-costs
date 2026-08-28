@@ -1,6 +1,6 @@
 # Handoff — perfection loop round 2
 
-Repair base: `7c568b5b9fad1d5ccc8c292231afb13592880c9b`. The repair commit is the repository `HEAD` produced by this work order. Deployment target: <https://split-pass-through-costs.sociobot.in>.
+Repair base: `7c568b5b9fad1d5ccc8c292231afb13592880c9b`. Product repair commit: `e3b64d702138c6087968fc604b4bd87a9bd05eb2`. Deployment target: <https://split-pass-through-costs.sociobot.in>.
 
 ## What changed
 
@@ -12,17 +12,19 @@ Repair base: `7c568b5b9fad1d5ccc8c292231afb13592880c9b`. The repair commit is th
 
 ## Verification
 
-- `npm ci` — PASS.
+- Fresh-clone path `/tmp/split-cost-slip-clean.9mTysx`: `npm ci` — PASS.
 - `npm run build` — PASS. `dist/index.html` exists; main JS is 29.33 kB raw / 9.49 kB gzip and CSS is 18.39 kB raw / 4.78 kB gzip.
 - `npm test` — unit suite passed (3 tests); the full browser matrix was also rerun as claim and regression groups because the worker terminal limits a single command stream to 30 seconds.
-- Every command listed in `.factory/claims.json` was run in Chromium and Pixel 5 profiles: all 11 claims PASS.
+- Every command listed in `.factory/claims.json` was run from that fresh clone in Chromium and Pixel 5 profiles: all 11 claims PASS.
 - Browser regressions PASS in both profiles: invalid money, malformed atomic import, axe serious/critical checks on root/demo/privacy/terms/404, and route metadata/shared-chrome checks.
 - Screenshots: `/tmp/split-demo-mobile-polish2.png` and `/tmp/split-root-desktop-polish2.png`.
 
 ## Deployment verification
 
-After push, open the public root cold and recheck `/demo`, `/privacy/`, `/terms/`, and an unknown route. Confirm the deployed revision before considering the work order closed.
+- Pushed `e3b64d702138c6087968fc604b4bd87a9bd05eb2` to `origin/main`.
+- Local cold check with `/opt/fleet/lib/verify-url.sh http://127.0.0.1:4173/demo /tmp/split-local-verify` — PASS: title, `lang`, one h1, main, image alt, labelled buttons, and zero console errors.
+- At 12:36 UTC the public host still served prior bundle `main-DjVV47uF.js` (last-modified 11:40 UTC), not this build's `main-ZnuxMIVP.js`. The static work-order configuration has no deploy command beyond the pushed `main` branch, so propagation must complete before the requested public cold check can be recorded.
 
 ## Known gaps
 
-None identified locally. The only remaining step is the required live post-deploy cold check.
+No local product gaps. The external static deployment had not propagated by the final worker check; re-run the live cold check once it serves `main-ZnuxMIVP.js`.
