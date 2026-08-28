@@ -1,4 +1,25 @@
-# Handoff\n\n(written by the worker at the end of each work order)
+# Handoff
+
+## Independent verification 1 — FAIL
+
+Verified 2026-08-28 for work order `split-pass-through-costs-verify-1` against candidate `5e0f616b65e1760ff1d8b42e7b7fa85fe5d4f17a` and <https://split-pass-through-costs.sociobot.in>.
+
+**Release decision: FAIL.** The live static files match the candidate byte-for-byte and normal split/export, persistence, 390 px mobile, keyboard, privacy, installability, warm offline reload, service-worker update, and performance checks pass. Release is blocked by:
+
+- High: invalid monetary text retains the previous cent value while the UI still reports “Balanced exactly” and saves/exports stale data.
+- High: a malformed backup accepted by shallow validation poisons IndexedDB and causes a persistent startup exception.
+- High: the production `$19` checkout endpoint returns HTTP 404, so Pro cannot be purchased.
+- Medium: attaching a bill before entering slip data appears successful but loses the attachment association on reload.
+- Medium: `/privacy/` and `/terms/` each have a serious axe contrast failure (4.47:1 versus 4.5:1).
+- Low: missing CSP/anti-framing headers, ineffective intended long-term asset caching, undersized mobile footer link targets, and an experimental label-in-name failure.
+
+Local gates remain green: clean `npm ci`; `npm audit` 0 vulnerabilities; `npm test` 3/3 unit plus 12/12 repository Playwright tests; `npm run build`/`tsc --noEmit` pass and emit `dist/`. Lighthouse 12.5.1 mobile/live scored 99 performance, 100 accessibility on the root page, 100 best practices, and 100 SEO; LCP 1.3 s, TBT 130 ms, CLS 0. The root page had no normal-load console/page errors. Chromium reported no PWA installability errors; live warm offline reload passed; a controlled v4→v5 service-worker update displayed the reload toast.
+
+Full steps, hashes, response headers, exact reproduction data, and severity details are in [`.factory/verification.md`](verification.md). Product code was not modified. Fix the High and Medium accessibility issues, enable the Sociobot production product, deploy a new candidate, and reverify.
+
+---
+
+## Builder handoff (pre-verification)
 # Split Cost Slip v1 — handoff
 
 Delivered 2026-08-28 for work order `split-pass-through-costs-build-1`.
