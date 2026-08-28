@@ -6,7 +6,7 @@ function safeCell(value: string): string {
 }
 
 export function slipCsv(slip: Slip): string {
-  const header = ['Supplier', 'Bill reference', 'Bill date', 'Client', 'Description', 'User-selected category', 'Treatment', 'Amount', 'Currency'];
+  const header = ['Supplier', 'Supplier bill reference', 'Bill date', 'Client', 'Description', 'User-selected category', 'Treatment', 'Amount', 'Currency'];
   const rows = slip.allocations.map((row) => [
     safeCell(slip.supplier),
     safeCell(slip.reference),
@@ -24,14 +24,14 @@ export function slipCsv(slip: Slip): string {
 export function clientLineList(slip: Slip): string {
   const billable = slip.allocations.filter((row) => row.billable);
   const lines = [
-    `PASS-THROUGH COSTS${slip.client ? ` — ${slip.client}` : ''}`,
+    `CLIENT COSTS${slip.client ? ` — ${slip.client}` : ''}`,
     `${slip.supplier || 'Supplier'}${slip.reference ? ` · Bill ${slip.reference}` : ''}${slip.billDate ? ` · ${slip.billDate}` : ''}`,
     '',
     ...billable.map((row) => `${row.description || 'Unlabelled cost'}${row.category ? ` (${row.category})` : ''}\t${formatMoney(row.amountCents, slip.currency)}`),
     '',
     `CLIENT REIMBURSEMENT TOTAL\t${formatMoney(billable.reduce((sum, row) => sum + row.amountCents, 0), slip.currency)}`,
     '',
-    'Categories and billable treatment were selected by the user and are not tax advice.',
+    'Check categories and treatments before sending. This is not tax advice.',
   ];
   return lines.join('\n');
 }

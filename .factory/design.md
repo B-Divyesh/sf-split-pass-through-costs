@@ -36,6 +36,7 @@ Cards are reserved for independent saved slips. The active document is one conti
 - **Rule:** a heavy black rule closes a section or confirms a balanced total.
 - **Margin note:** status, privacy, and validation appear beside the affected material in small sans-serif type.
 - **Tear-off:** CSV, client line list, and backup exports sit together as detachable outputs.
+- **Reader's proof:** optional bill extraction opens as a marked-up proof sheet. Factual suggestions remain editable, and every treatment starts unchosen.
 - Billable is a real labelled switch with `Billable` / `Overhead` words; color is supplemental.
 - Destructive actions name the object and require confirmation. Row deletion is reversible through an undo notice.
 
@@ -58,7 +59,7 @@ The hero is a generated, text-free overhead editorial still life of one creased 
 - Composition: landscape, main paper anchored right, generous clean paper space left, no interface mockup
 - Negative list: no readable text, no numbers, no logos, no watermark, no people/hands, no currency symbols, no screens, no gradients, no blue, no glossy 3D
 
-Generated with the factory image model (`factory-image`, Azure AI Foundry) on 2026-08-28. The selected output is original project artwork under the repository's MIT license. Source PNG and exact prompt sidecar are retained in `assets/src/`; optimized WebP is shipped in `public/assets/`. `social-broadsheet.jpg` is a 1200×630 center crop derived from that same selected artwork for social metadata. The footer does not make an untestable asset-provenance promise.
+Generated with the factory image model (`factory-image`, Azure AI Foundry) on 2026-08-28. The selected output is original project artwork under the repository's MIT license. Source PNG and exact prompt sidecar are retained in `assets/src/`; optimized WebP is shipped in `public/assets/`. `social-broadsheet-4ca379c4.jpg` is a 1200×630 center crop derived from that same selected artwork for social metadata. The footer does not make an untestable asset-provenance promise.
 
 ## Accessibility and image behavior
 

@@ -1,1 +1,1 @@
-Split supplier bills into billable costs and overhead.
+Split supplier bills into billable costs and overhead, with optional editable bill-detail extraction.

@@ -1,24 +1,31 @@
 # Split Cost Slip
 
-Split one supplier bill into billable costs and overhead. It is for contractors who need to separate client costs from their own overhead.
+Split one supplier bill into billable costs and overhead.
+
+It is for contractors who need to separate client costs from their own overhead.
 
 Attach the supplier bill and enter each cost row. Mark each row billable or overhead. Export a CSV or client line list.
 
-Try the sample: <https://split-pass-through-costs.sociobot.in/demo>
+Try the sample: <https://split-pass-through-costs.sociobot.in/?demo=1>
 
 ## What it includes
 
-- CSV keeps each cost row's supplier bill reference, category, amount, currency, and billable or overhead choice.
+- CSV keeps each row's supplier bill reference, category, amount, currency, and billable or overhead choice.
 - Client line lists and printed client line lists include billable rows only.
 - Images and PDFs up to 10 MB are stored in this browser.
 - Saved slips and attachments stay in this browser.
 - Exact cent totals show balanced, under, and over states.
-- Backup files contain slip details, not attachment files.
+- JSON backups export saved slip details without attachment files.
 - A separate sample demo never reads or writes real slips.
-- An installable app manifest works offline after the first visit.
+- Install Split Cost Slip as an app in supported browsers.
+- It works offline after the first visit.
 - Saving and exports are free.
 
-It splits bills. It does not replace accounting software or provide tax advice.
+Optional extraction sends the named attachment to Sociobot only after you start it.
+
+It uses your Sociobot key and returns editable bill details. You choose billable or overhead for every suggested line.
+
+Manual entry remains available offline. Split Cost Slip does not replace accounting software or provide tax advice.
 
 ## Develop
 
@@ -40,13 +47,21 @@ npm test
 npm run build
 ```
 
-`npm test` runs money, desktop, mobile, accessibility, and offline-reload tests. The production build is `npm run build`; deploy the generated `dist/` directory.
+`npm test` runs money, desktop, mobile, accessibility, privacy, extraction, and offline tests.
 
-Every visitor-facing claim is listed in [`.factory/claims.json`](.factory/claims.json). Run any listed command from a fresh checkout. The sample route and reset behavior are documented in [`.factory/demo.md`](.factory/demo.md).
+The production build is `npm run build`. Deploy the generated `dist/` directory.
+
+Every visitor-facing claim is listed in [`.factory/claims.json`](.factory/claims.json).
+
+Run each listed command from a fresh checkout. Demo details are in [`.factory/demo.md`](.factory/demo.md).
 
 ## Privacy and storage
 
-The complete demo flow sends no cross-origin request. Backup files omit attachments, so keep supplier bill files separately.
+The demo sends no requests to other websites. Manual bill entry, storage, and exports stay in this browser.
+
+Extraction sends the named attachment to `api.sociobot.in` only after you start it. Your key remains removable from the extraction panel.
+
+Backup files omit attachments, so keep original attachments separately.
 
 ## Project notes
 

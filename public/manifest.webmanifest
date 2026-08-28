@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Split Cost Slip",
   "short_name": "Cost Slip",
-  "description": "Split one supplier bill into balanced billable and overhead costs, locally and offline.",
+  "description": "Split one supplier bill into billable costs and overhead.",
   "start_url": "/?v=1",
   "scope": "/",
   "display": "standalone",

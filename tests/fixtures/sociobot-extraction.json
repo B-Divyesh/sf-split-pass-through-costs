@@ -1,0 +1,11 @@
+{
+  "supplier": "Acme Timber Yard",
+  "reference": "INV-2048",
+  "billDate": "2026-08-22",
+  "currency": "USD",
+  "total": "100.00",
+  "lines": [
+    { "description": "Oak boards", "amount": "60.00" },
+    { "description": "Delivery", "amount": "40.00" }
+  ]
+}
