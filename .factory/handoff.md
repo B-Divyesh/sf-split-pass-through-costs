@@ -1,34 +1,35 @@
-# Handoff
+# Handoff — polish 1
 
-## Adversarial first-read review 1 — FAIL
+Released repair commit: 89fd592 (product repair 338e70c). Public URL: https://split-pass-through-costs.sociobot.in.
 
-Reviewed 2026-08-28 for work order `split-pass-through-costs-review-1` against commit `cc621feee496c7aa11ffc9e5696ef8cfdc81e25d` and <https://split-pass-through-costs.sociobot.in>.
+## What changed
 
-Product code was not modified. The full review is in [`.factory/review-1.md`](review-1.md).
+- Rewrote the first screen for contractors, with the job headline, sample action, real-entry action, and three tested facts.
+- Added a one-click Sunrise Building Supply demo at /demo and ?demo=1. It uses a separate split-cost-slip:demo IndexedDB database, has a persistent banner, reset, and discard-on-exit behavior.
+- Added .factory/claims.json, six isolated claim tests, demo/copy documentation, and the full finding map in .factory/polish-1.md.
+- Fixed stale invalid-money export, atomic backup schema validation, attachment-first persistence, strict export blocking, legal-page contrast, mobile footer targets, wordmark name, route metadata, common legal chrome, real 404, CSP/anti-framing headers, and asset caching.
+- Removed the unavailable Pro checkout and all related price, merchant, and license claims. Core save and export tools are free.
 
-### Outcome
+## Verification
 
-**FAIL.** The first screen does not name the audience and hides the desktop primary action below the viewport. There is no one-click sample demo; `/demo` is the normal app and reads real IndexedDB data. `.factory/claims.json`, claim-tagged tests, and `.factory/demo.md` are absent.
+Run npm test, npm run build, and each claim command listed in .factory/claims.json.
 
-All nine defects from the prior verification remain reproducible or unchanged: stale values exported after invalid money input, malformed-import startup poisoning, 404 Pro checkout, first-input attachment loss, legal-page contrast, missing CSP/anti-framing policy, wrong deployed cache headers, undersized mobile footer links, and the wordmark label-in-name failure. The live site also lacks a designed 404, complete route metadata, consistent chrome, route-change focus, and required landing sections. Copy and terminology findings are itemized with rewrites in the review.
+- npm test: PASS — 3 Vitest tests plus 20 Playwright runs (desktop and Pixel 5).
+- npm run build: PASS — dist/index.html and dist/demo/index.html; initial JS 27.55 kB raw / 9.16 kB gzip and CSS 17.13 kB raw / 4.53 kB gzip.
+- Fresh clone /tmp/split-cost-slip-clean.FuIAhE: npm ci, build, and all six individual claim commands passed.
+- Playwright axe integration: 0 serious/critical WCAG 2 A/AA violations on root, demo, privacy, terms, and in-app 404 at desktop and mobile.
+- Offline claim: warm /demo reload passed after context.setOffline(true).
 
-### Verification performed
+## Deployment and cold live check
 
-```sh
-npm ci
-npm test
-npm run build
-```
+Deployed with /opt/fleet/lib/deploy-static.sh split-pass-through-costs dist on 2026-08-28. Azure Static Web Apps deployment completed successfully; custom domain status was Ready.
 
-- `npm test`: PASS — 3/3 unit tests and 12/12 Playwright tests.
-- `npm run build`: PASS — `dist/` emitted; app JavaScript 27.54 kB raw / 9.24 kB gzip.
-- Factory URL verifier: PASS for limited root checks; HTTP 200, title/lang/main/h1/alt present, no load console errors.
-- Live axe: root passes at desktop and 390 px; Privacy and Terms each fail serious color contrast.
-- Warm live offline reload: PASS.
-- Fresh ordinary-flow request interception: no cross-origin requests.
-- Link crawl: root, Privacy, Terms, and Source return 200; Pro checkout returns 404.
-- Fresh-context Playwright reproductions covered demo storage sharing, invalid-money CSV export, malformed import/reload, empty-slip attachment/reload, routing focus, metadata, mobile target sizes, and unknown-route behavior.
+- Root cold check: title Split Cost Slip — split billable and overhead costs; no console errors; screenshot /tmp/split-cost-slip-live-mobile.png.
+- Demo cold check: title Demo — Split Cost Slip, required banner, Sunrise Building Supply sample, and Balanced exactly; screenshot /tmp/split-cost-slip-live-demo.png.
+- Live axe via Playwright: root, demo, privacy, and terms all reported 0 serious/critical violations and 0 console errors.
+- Live https://split-pass-through-costs.sociobot.in/does-not-exist: HTTP 404, product-styled page, correct title and h1.
+- Live response headers: root and legal routes emit CSP, X-Frame-Options: DENY, X-Content-Type-Options: nosniff, and Referrer-Policy; hashed assets are immutable and sw.js is no-cache.
 
-### Required next step
+## Known gaps
 
-Resolve every `F-1-*` finding in `.factory/review-1.md`, deploy the new candidate, and repeat the complete review from fresh browser/storage contexts. Do not treat the passing generic test suite as claim verification; the next candidate needs a populated claims registry and one tagged sandbox test per retained claim.
+None. The old paid checkout was intentionally removed because the registered billing endpoint returned 404; it should only return with a registered product and its own sandbox claim tests.
