@@ -1,30 +1,24 @@
-# Handoff — perfection loop round 2
+# Handoff — adversarial review 3
 
-Repair base: `7c568b5b9fad1d5ccc8c292231afb13592880c9b`. Product repair commit: `e3b64d702138c6087968fc604b4bd87a9bd05eb2`. Deployment target: <https://split-pass-through-costs.sociobot.in>.
+Work order: `split-pass-through-costs-review-3`. Reviewed commit: `352fc98c021ce1c3cc2d3cf5884412bcca73cf3c`. Live target: <https://split-pass-through-costs.sociobot.in>.
 
-## What changed
+## What was done
 
-- Made `/demo` and `?demo=1` open on a complete, isolated Sunrise Building Supply sample summary and editable sample slip. The persistent banner, reset, and Start for real controls remain visible.
-- Rebuilt the claims registry with 11 unique, tagged browser proofs. Claims now test all CSV fields, image/PDF persistence and boundary behavior, full-flow network privacy, free outcomes, billable-only client outputs, backup omission, persistence, cent states, offline reload, and installability.
-- Corrected client printing to generate a billable-only client line list instead of printing overhead rows.
-- Unified root, demo, legal, and 404 chrome; completed legal/404 metadata and added a 180×180 apple-touch icon.
-- Standardized `supplier bill`, `attachment`, and `client line list` in visitor copy. Updated README, catalog description, copy audit, and the finding-by-finding repair map.
+- Wrote `.factory/review-3.md` with verdict **FAIL**, 15 findings, full copy/claims/history audits, and concrete fixes.
+- Did not modify product code.
+- Confirmed the live JavaScript, CSS, and demo HTML exactly match the clean local build.
 
 ## Verification
 
-- Fresh-clone path `/tmp/split-cost-slip-clean.9mTysx`: `npm ci` — PASS.
-- `npm run build` — PASS. `dist/index.html` exists; main JS is 29.33 kB raw / 9.49 kB gzip and CSS is 18.39 kB raw / 4.78 kB gzip.
-- `npm test` — unit suite passed (3 tests); the full browser matrix was also rerun as claim and regression groups because the worker terminal limits a single command stream to 30 seconds.
-- Every command listed in `.factory/claims.json` was run from that fresh clone in Chromium and Pixel 5 profiles: all 11 claims PASS.
-- Browser regressions PASS in both profiles: invalid money, malformed atomic import, axe serious/critical checks on root/demo/privacy/terms/404, and route metadata/shared-chrome checks.
-- Screenshots: `/tmp/split-demo-mobile-polish2.png` and `/tmp/split-root-desktop-polish2.png`.
+- Cold screenshots: `/tmp/review3-root-mobile.png`, `/tmp/review3-root-desktop.png`, `/tmp/review3-demo-mobile.png`.
+- Clean clone: `/tmp/split-review3-clean.Tz0jFY/repo`.
+- All 11 commands in `.factory/claims.json`: PASS in desktop Chromium and Pixel 5.
+- `npm test`: PASS — 3 unit tests and 30 browser runs.
+- `npm run build`: PASS — `dist/` emitted; JS 29.33 kB raw / 9.49 kB gzip.
+- Live factory URL verifier: PASS; zero console errors.
+- Live axe on root, demo, Privacy, Terms, and 404: zero serious/critical findings.
+- Live demo reset, real/demo separation, demo exit, no-cross-origin observation, offline reload, route metadata, link crawl, caching, and response headers were checked. The stable CSS cache policy failed.
 
-## Deployment verification
+## Known gaps / next steps
 
-- Pushed `e3b64d702138c6087968fc604b4bd87a9bd05eb2` to `origin/main`.
-- Local cold check with `/opt/fleet/lib/verify-url.sh http://127.0.0.1:4173/demo /tmp/split-local-verify` — PASS: title, `lang`, one h1, main, image alt, labelled buttons, and zero console errors.
-- At 12:36 UTC the public host still served prior bundle `main-DjVV47uF.js` (last-modified 11:40 UTC), not this build's `main-ZnuxMIVP.js`. The static work-order configuration has no deploy command beyond the pushed `main` branch, so propagation must complete before the requested public cold check can be recorded.
-
-## Known gaps
-
-No local product gaps. The external static deployment had not propagated by the final worker check; re-run the live cold check once it serves `main-ZnuxMIVP.js`.
+The review is not releasable under the zero-finding rule. Blocking items are the wrong `/demo` apple-touch metadata (reopened F-2-13/F-1-44), missing 404 focus (reopened F-1-46), broad untested Privacy wording (reopened F-2-10/F-1-31), and immutable one-year caching on stable `/assets/app.css` (reopened F-1-40). See `.factory/review-3.md` for all major/minor findings and exact fixes.
