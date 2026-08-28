@@ -1,17 +1,22 @@
 # Split Cost Slip
 
-Split Cost Slip helps contractors separate one supplier bill into billable costs and overhead. Attach the bill and enter each cost. Mark each row billable or overhead. Export a CSV or client line list.
+Split one supplier bill into billable costs and overhead. It is for contractors who need to separate client costs from their own overhead.
+
+Attach the supplier bill and enter each cost row. Mark each row billable or overhead. Export a CSV or client line list.
 
 Try the sample: <https://split-pass-through-costs.sociobot.in/demo>
 
 ## What it includes
 
-- Exact cent totals with a clear balanced, under, or over state
-- Billable and overhead cost rows with your own category labels
-- Images and PDFs up to 10 MB, stored in this browser
-- CSV, client line list, print, and JSON backup/import tools
-- A separate sample demo that never reads or writes real slips
-- An installable app that works offline after the first visit
+- CSV keeps each cost row's supplier bill reference, category, amount, currency, and billable or overhead choice.
+- Client line lists and printed client line lists include billable rows only.
+- Images and PDFs up to 10 MB are stored in this browser.
+- Saved slips and attachments stay in this browser.
+- Exact cent totals show balanced, under, and over states.
+- Backup files contain slip details, not attachment files.
+- A separate sample demo never reads or writes real slips.
+- An installable app manifest works offline after the first visit.
+- Saving and exports are free.
 
 It splits bills. It does not replace accounting software or provide tax advice.
 
@@ -24,7 +29,7 @@ npm ci
 npm run dev
 ```
 
-Vite prints the local URL. Real records use browser storage for that origin. The demo uses a separate browser-storage namespace.
+Vite prints the local URL. Real records use browser storage for that origin. The demo uses separate browser storage.
 
 ## Test and build
 
@@ -41,7 +46,7 @@ Every visitor-facing claim is listed in [`.factory/claims.json`](.factory/claims
 
 ## Privacy and storage
 
-Slip details and attachments stay in browser IndexedDB. The complete demo flow sends no cross-origin request. There are no accounts, analytics, remote bill uploads, CDN fonts, or third-party runtime scripts. JSON backups omit attachments, so keep original supplier files separately.
+The complete demo flow sends no cross-origin request. Backup files omit attachments, so keep supplier bill files separately.
 
 ## Project notes
 

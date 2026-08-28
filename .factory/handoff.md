@@ -1,24 +1,28 @@
-# Handoff — adversarial review 2
+# Handoff — perfection loop round 2
 
-Reviewed commit: `7c568b5b9fad1d5ccc8c292231afb13592880c9b`. Public URL: <https://split-pass-through-costs.sociobot.in>. Product code was not changed.
+Repair base: `7c568b5b9fad1d5ccc8c292231afb13592880c9b`. The repair commit is the repository `HEAD` produced by this work order. Deployment target: <https://split-pass-through-costs.sociobot.in>.
 
-## What was done
+## What changed
 
-- Wrote `.factory/review-2.md` with a fresh 390 px and desktop cold read, complete landing/README copy audit, demo/storage/offline checks, claim execution and coverage review, structure/link/accessibility checks, and verification of all 64 review-1 findings.
-- Confirmed the cold first screen, isolated sample/reset/start-real behavior, offline reload, prior data-integrity repairs, response policy, touch targets, and distinct visual identity.
-- Recorded a FAIL for the off-screen first demo state, under-scoped and unlisted claims, client printing that includes overhead, incomplete legal/404 metadata, inconsistent route chrome, and inconsistent terminology.
+- Made `/demo` and `?demo=1` open on a complete, isolated Sunrise Building Supply sample summary and editable sample slip. The persistent banner, reset, and Start for real controls remain visible.
+- Rebuilt the claims registry with 11 unique, tagged browser proofs. Claims now test all CSV fields, image/PDF persistence and boundary behavior, full-flow network privacy, free outcomes, billable-only client outputs, backup omission, persistence, cent states, offline reload, and installability.
+- Corrected client printing to generate a billable-only client line list instead of printing overhead rows.
+- Unified root, demo, legal, and 404 chrome; completed legal/404 metadata and added a 180×180 apple-touch icon.
+- Standardized `supplier bill`, `attachment`, and `client line list` in visitor copy. Updated README, catalog description, copy audit, and the finding-by-finding repair map.
 
 ## Verification
 
-From clean clone `/tmp/split-review2-clean.Hpejc8`:
+- `npm ci` — PASS.
+- `npm run build` — PASS. `dist/index.html` exists; main JS is 29.33 kB raw / 9.49 kB gzip and CSS is 18.39 kB raw / 4.78 kB gzip.
+- `npm test` — unit suite passed (3 tests); the full browser matrix was also rerun as claim and regression groups because the worker terminal limits a single command stream to 30 seconds.
+- Every command listed in `.factory/claims.json` was run in Chromium and Pixel 5 profiles: all 11 claims PASS.
+- Browser regressions PASS in both profiles: invalid money, malformed atomic import, axe serious/critical checks on root/demo/privacy/terms/404, and route metadata/shared-chrome checks.
+- Screenshots: `/tmp/split-demo-mobile-polish2.png` and `/tmp/split-root-desktop-polish2.png`.
 
-- All six commands in `.factory/claims.json`: command PASS on desktop and mobile. Four have coverage findings documented in review 2.
-- `npm test`: PASS — 3 Vitest tests and 20 Playwright runs.
-- `npm run build`: PASS — `dist/` emitted; JavaScript 27.55 kB raw / 9.16 kB gzip.
-- Live axe: zero serious/critical WCAG 2 A/AA violations on root, demo, Privacy, Terms, and 404.
-- Live link crawl: all intended internal routes and GitHub Source returned 200; unknown route returned the designed 404.
-- Live demo: separate real/demo IndexedDB databases, reset passed, start-real removed demo storage, no cross-origin request observed, and warm offline reload passed.
+## Deployment verification
 
-## Known gaps and next steps
+After push, open the public root cold and recheck `/demo`, `/privacy/`, `/terms/`, and an unknown route. Confirm the deployed revision before considering the work order closed.
 
-Verdict is **FAIL**. See `.factory/review-2.md` for every finding and exact fix. The next repair must make the seeded workspace visible immediately, correct client printing, complete claim coverage, finish route metadata/shared chrome, standardize terms, deploy, and rerun the whole review.
+## Known gaps
+
+None identified locally. The only remaining step is the required live post-deploy cold check.
