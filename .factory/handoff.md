@@ -56,11 +56,22 @@ Results:
 - Lighthouse 12.5.1 mobile: Performance 100, Accessibility 100, Best Practices 100, SEO 100; FCP 0.90 s, LCP 1.43 s, TBT 0 ms, CLS 0.00050, Speed Index 0.90 s.
 - Visual inspection: desktop and 390px screenshots retain the broadsheet hierarchy, warm-paper palette, orange action grammar, legible stacked controls, and no horizontal overflow.
 
-Evidence is in `.factory/evidence/repair-2/`: `local/verify.json`, desktop/mobile screenshots, and `lighthouse-local.json`.
+Evidence is in `.factory/evidence/repair-2/`: local/live `verify.json` files, desktop/mobile screenshots, and both Lighthouse JSON reports.
 
 ## Deployment and live identity
 
-Deployment and post-deploy identity evidence will be appended immediately after the committed `dist/` artifact is uploaded through `/opt/fleet/lib/deploy-static.sh split-pass-through-costs dist`.
+- Repair commit `90466bb80cf27599f6ad8b36c2bd48a55766eaf9` was pushed to `origin/main`.
+- `/opt/fleet/lib/deploy-static.sh split-pass-through-costs dist` reused `sf-split-pass-through-costs` in `centralus` and completed Azure deployment `ba088547-3bfb-4650-8509-62b62d306621` successfully.
+- The custom domain remained `Ready`; HTTPS returned 200. HTTP redirects to HTTPS with 301.
+- SHA-256 matched byte-for-byte for root, demo, Privacy, Terms, offline, 404, worker, manifest, route script, robots, sitemap, application JS/CSS, both artwork files, and all five icons. Root hash is `a0e9ee1ee4640d5c9ae9c747dd4a0cbd57303b88e1350e49448654117cc11b75`; application JS is `93d430ecbcc477a046015669b45a8f0debb25b0a279107aecc7720da1826b505`; worker is `a28575f40a389ca1e2fb376e80a6203f977918c44f1a0393d4f7470b3ce93e3f`.
+- Factory live smoke check: PASS — 997 ms network-idle load, no console/page errors, correct title/lang/h1/main/alt/button labels, and visually correct desktop/390px captures.
+- Exact live 390px reproductions: PASS — attachment-first state moved from `{1,1}` through reload to `{0,0}` after deletion; `1,2,3` remained invalid and blocked balance/save/export.
+- Live offline check: PASS — Sunrise sample, `Balanced exactly`, and `Offline — ready to keep working` restored under the sole cache `split-cost-slip-v10`.
+- Live privacy check for the repaired manual/demo/offline flows: PASS — only `https://split-pass-through-costs.sociobot.in` was requested; zero console/page errors.
+- Live Axe: PASS — zero serious/critical WCAG 2 A/AA findings on root, demo, Privacy, Terms, offline, static 404, and a true HTTP 404 at desktop and 390px (14 checks).
+- Live response policy: PASS — HSTS, CSP with `frame-ancestors 'none'`, `X-Frame-Options: DENY`, `nosniff`, and strict referrer policy. Root revalidates after 30 seconds; fingerprinted assets are one-year immutable; `sw.js` is `no-cache`.
+- `/_headers`, `/staticwebapp.config.json`, and an unknown route return 404. The unknown route retains the designed recovery page.
+- Live Lighthouse 12.5.1 mobile: Performance 100, Accessibility 100, Best Practices 100, SEO 100; FCP 1.06 s, LCP 1.28 s, TBT 0 ms, CLS 0.00050, Speed Index 1.06 s.
 
 ## Known gaps
 
