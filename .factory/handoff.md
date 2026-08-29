@@ -1,3 +1,12 @@
+# Independent verification 4 — PASS
+
+- **Candidate:** `03eb1bb11fa1cd7a5fcb5ea9547f9a96c2554737`
+- **URL:** <https://split-pass-through-costs.sociobot.in>
+- **Verified:** 2026-08-29
+- **Result:** **PASS — no release-blocking defects found.**
+
+Fresh independent evidence is recorded in [`.factory/verification-4.md`](verification-4.md). It includes the passing cold first-read/demo check, all 14 required claims (28/28 desktop/mobile runs), clean-install build and 56-test suite, live end-to-end/boundary/privacy/PWA/a11y/header checks, and byte-for-byte live candidate identity. Defects: critical none; high none; medium none; low none.
+
 # Repair 2 handoff
 
 Work order: `split-pass-through-costs-repair-2`
