@@ -1,4 +1,4 @@
-# Copy audit — polish 3
+# Copy audit — polish 5
 
 Counts treat hyphenated terms as one word. Landing, demo, legal, and README copy has no sentence over 22 words and no banned marketing terms. Claims in the Result column are registered in `.factory/claims.json`.
 
@@ -90,4 +90,14 @@ Counts treat hyphenated terms as one word. Landing, demo, legal, and README copy
 | Chargeable treatment | billable |
 | Internal treatment | overhead |
 
-The catalog description is a 13-word, verb-first sentence. Product copy uses the terms above consistently.
+Product copy uses the terms above consistently.
+
+## Error route
+
+| Words | Copy | Result |
+| ---: | --- | --- |
+| 3 | Page not found | Literal route label |
+| 5 | We cannot find this page. | Literal error heading |
+| 9 | Check the address, return home, or open the sample. | Clear recovery instruction |
+
+The catalog description is a 12-word, verb-first sentence under 120 characters.

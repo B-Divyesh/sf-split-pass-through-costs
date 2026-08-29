@@ -323,16 +323,23 @@ test('uses route-specific metadata and one shared chrome', async ({ page }) => {
 
 test('focuses each route heading through unknown-route back and forward navigation', async ({ page }) => {
   await page.goto('/404.html');
+  await expect(page.locator('.eyebrow')).toHaveText('Page not found');
+  await expect(page.locator('h1')).toHaveText('We cannot find this page.');
+  await expect(page.locator('main > p').nth(1)).toHaveText('Check the address, return home, or open the sample.');
+  await expect(page.getByRole('link', { name: 'Return home' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open the demo' })).toBeVisible();
   await expect(page.locator('h1')).toBeFocused();
   await page.goto('/');
   await expect(page.locator('h1')).toBeFocused();
   await page.goto('/review-3-not-found');
-  await expect(page.locator('h1')).toHaveText('This slip is not here.');
+  await expect(page.locator('.eyebrow')).toHaveText('Page not found');
+  await expect(page.locator('h1')).toHaveText('We cannot find this page.');
+  await expect(page.locator('main > p').nth(1)).toHaveText('Check the address, return home, or open the sample.');
   await expect(page.locator('h1')).toBeFocused();
   await page.goBack();
   await expect(page.locator('h1')).toBeFocused();
   await page.goForward();
-  await expect(page.locator('h1')).toHaveText('This slip is not here.');
+  await expect(page.locator('h1')).toHaveText('We cannot find this page.');
   await expect(page.locator('h1')).toBeFocused();
 });
 
