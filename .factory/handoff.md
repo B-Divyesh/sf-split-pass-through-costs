@@ -37,7 +37,12 @@ npm audit --audit-level=low         # PASS; 0 vulnerabilities
 
 ## Deployment and live evidence
 
-Pending commit push and static deployment for this repair.
+- Pushed to `origin/main` at `9b4491f`; repair code is `40b76ab`.
+- Azure Static Web Apps production deployment `416a6198-8541-4c2b-a0ba-99783d3a34e0` succeeded on 2026-08-29.
+- Live URL: <https://split-pass-through-costs.sociobot.in> (HTTP 200).
+- The live `index.html` SHA-256 is `f7217d28ed3c99ac1a307a3bd69ac94f6a81a5ea04ce0b48905cea7263a7ec47`, matching `dist/index.html`. The live `assets/main-DKCa7sMB.js` SHA-256 is `96569cf845f2663628e8c19f9ee7b8671e037d18b1cac44b4056404f57379c9f`, matching the production build.
+- Live verifier smoke: 200, no console/page errors, correct title/lang/one h1/main/alt data, desktop and 390 px screenshots. A true unknown route returns 404.
+- Live headers confirm HSTS, CSP with `frame-ancestors 'none'`, `X-Frame-Options: DENY`, nosniff, strict referrer policy, immutable cache for hashed JavaScript, and `Cache-Control: no-cache` for `sw.js`.
 
 ## Known gaps
 
