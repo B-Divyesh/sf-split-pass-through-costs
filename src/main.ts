@@ -83,23 +83,87 @@ function shell(): void {
   }
 }
 function formatBytes(bytes: number): string { return bytes >= 1_000_000 ? `${(bytes / 1_000_000).toFixed(1)} MB` : `${Math.ceil(bytes / 1000)} KB`; }
-function fillForm(): void { el<HTMLInputElement>('supplier').value = current.supplier; el<HTMLInputElement>('reference').value = current.reference; el<HTMLInputElement>('client').value = current.client; el<HTMLInputElement>('bill-date').value = current.billDate; el<HTMLSelectElement>('currency').value = current.currency; el<HTMLInputElement>('bill-total').value = current.totalCents ? moneyInput(current.totalCents) : ''; el('slip-number').textContent = current.reference || 'Draft'; el('attachment-name').textContent = current.attachment ? `${current.attachment.name} · ${formatBytes(current.attachment.size)}` : 'No attachment yet'; el<HTMLButtonElement>('view-attachment').hidden = !current.attachment; el<HTMLButtonElement>('open-extraction').disabled = !current.attachment; renderRows(); renderTotals(); }
-function renderRows(): void { const container = el<HTMLDivElement>('allocation-rows'); container.replaceChildren(); current.allocations.forEach((row, index) => { const item = document.createElement('fieldset'); item.className = 'allocation-row'; item.innerHTML = `<legend>Cost row ${index + 1}</legend><div class="row-identity"><label>Description<input class="row-description" autocomplete="off"></label><label>Category<input class="row-category" list="category-list" autocomplete="off"></label></div><label class="treatment-control"><input class="row-billable" type="checkbox"><span class="switch" aria-hidden="true"></span><span class="treatment-copy"><strong></strong><small></small></span></label><label class="row-amount">Amount<input class="row-amount-input" inputmode="decimal" autocomplete="off" aria-label="Amount for cost row ${index + 1}" aria-describedby="validation-message"></label><button class="remove-row" type="button" aria-label="Remove cost row ${index + 1}">×</button>`; const description = item.querySelector<HTMLInputElement>('.row-description')!, category = item.querySelector<HTMLInputElement>('.row-category')!, billable = item.querySelector<HTMLInputElement>('.row-billable')!, amount = item.querySelector<HTMLInputElement>('.row-amount-input')!; description.value = row.description; category.value = row.category; billable.checked = row.billable; amount.value = row.amountCents ? moneyInput(row.amountCents) : ''; updateTreatment(item, row.billable); description.addEventListener('input', () => { row.description = description.value; changed(); }); category.addEventListener('input', () => { row.category = category.value; changed(); }); billable.addEventListener('change', () => { row.billable = billable.checked; updateTreatment(item, row.billable); changed(); }); amount.addEventListener('input', () => setMoney(amount, `row-${row.id}`, (value) => { row.amountCents = value; })); item.querySelector<HTMLButtonElement>('.remove-row')!.addEventListener('click', () => { current.allocations.splice(index, 1); renderRows(); changed(); showToast('Cost row removed.', 'Undo', () => { current.allocations.splice(index, 0, row); renderRows(); changed(); }); }); container.append(item); }); if (!document.getElementById('category-list')) { const list = document.createElement('datalist'); list.id = 'category-list'; categories.forEach((value) => { const option = document.createElement('option'); option.value = value; list.append(option); }); document.body.append(list); } }
+function fillForm(): void { el<HTMLInputElement>('supplier').value = current.supplier; el<HTMLInputElement>('reference').value = current.reference; el<HTMLInputElement>('client').value = current.client; el<HTMLInputElement>('bill-date').value = current.billDate; el<HTMLSelectElement>('currency').value = current.currency; el<HTMLInputElement>('bill-total').value = current.totalCents ? moneyInput(current.totalCents) : ''; el('slip-number').textContent = current.reference || 'Draft'; el('save-state').textContent = saved.some((slip) => slip.id === current.id) ? (demo ? 'Sample record' : 'Saved in this browser') : 'Not saved yet'; el('attachment-name').textContent = current.attachment ? `${current.attachment.name} · ${formatBytes(current.attachment.size)}` : 'No attachment yet'; el<HTMLButtonElement>('view-attachment').hidden = !current.attachment; el<HTMLButtonElement>('open-extraction').disabled = !current.attachment; renderRows(); renderTotals(); }
+function renderRows(): void { const container = el<HTMLDivElement>('allocation-rows'); container.replaceChildren(); current.allocations.forEach((row, index) => { const item = document.createElement('fieldset'); item.className = 'allocation-row'; item.innerHTML = `<legend>Cost row ${index + 1}</legend><div class="row-identity"><label>Description<input class="row-description" autocomplete="off"></label><label>Category<input class="row-category" list="category-list" autocomplete="off"></label></div><label class="treatment-control"><input class="row-billable" type="checkbox"><span class="switch" aria-hidden="true"></span><span class="treatment-copy"><strong></strong><small></small></span></label><label class="row-amount">Amount<input class="row-amount-input" inputmode="decimal" autocomplete="off" aria-label="Amount for cost row ${index + 1}" aria-describedby="validation-message"></label><button class="remove-row" type="button" aria-label="Remove cost row ${index + 1}">×</button>`; const description = item.querySelector<HTMLInputElement>('.row-description')!, category = item.querySelector<HTMLInputElement>('.row-category')!, billable = item.querySelector<HTMLInputElement>('.row-billable')!, amount = item.querySelector<HTMLInputElement>('.row-amount-input')!; description.value = row.description; category.value = row.category; billable.checked = row.billable; amount.value = row.amountCents ? moneyInput(row.amountCents) : ''; updateTreatment(item, row.billable); description.addEventListener('input', () => { row.description = description.value; description.removeAttribute('aria-invalid'); changed(); }); category.addEventListener('input', () => { row.category = category.value; changed(); }); billable.addEventListener('change', () => { row.billable = billable.checked; updateTreatment(item, row.billable); changed(); }); amount.addEventListener('input', () => setMoney(amount, `row-${row.id}`, (value) => { row.amountCents = value; })); item.querySelector<HTMLButtonElement>('.remove-row')!.addEventListener('click', () => { current.allocations.splice(index, 1); renderRows(); changed(); showToast('Cost row removed.', 'Undo', () => { current.allocations.splice(index, 0, row); renderRows(); changed(); }); }); container.append(item); }); if (!document.getElementById('category-list')) { const list = document.createElement('datalist'); list.id = 'category-list'; categories.forEach((value) => { const option = document.createElement('option'); option.value = value; list.append(option); }); document.body.append(list); } }
 function updateTreatment(item: HTMLElement, billable: boolean): void { item.querySelector('.treatment-copy strong')!.textContent = billable ? 'Billable' : 'Overhead'; item.querySelector('.treatment-copy small')!.textContent = billable ? 'Charge to client' : 'Your cost'; }
 function setMoney(field: HTMLInputElement, key: string, assign: (value: number) => void): void { const parsed = parseMoney(field.value); const bad = field.value !== '' && parsed === null; field.setAttribute('aria-invalid', String(bad)); if (bad) invalidFields.add(key); else { invalidFields.delete(key); assign(parsed ?? 0); } updateValidation(); changed(); }
 function updateValidation(): void { const message = valid() ? '' : 'Use a whole amount with no more than two decimal places. Fix the highlighted amount before saving or exporting.'; el('validation-message').textContent = message; }
+function clearActionValidation(): void { el('validation-message').textContent = valid() ? '' : 'Use a whole amount with no more than two decimal places. Fix the highlighted amount before saving or exporting.'; }
+function blankRow(row: Allocation): boolean { return !row.description.trim() && !row.category.trim() && row.amountCents === 0; }
+function cleanSlip(slip: Slip): Slip {
+  return {
+    ...slip,
+    supplier: slip.supplier.trim(),
+    reference: slip.reference.trim(),
+    client: slip.client.trim(),
+    allocations: slip.allocations.filter((row) => !blankRow(row)).map((row) => ({ ...row, description: row.description.trim(), category: row.category.trim() })),
+  };
+}
+function showActionValidation(message: string, focus?: HTMLElement): false {
+  el('validation-message').textContent = message;
+  showToast(message);
+  focus?.focus();
+  return false;
+}
+function validateSlipAction(action: 'saving' | 'exporting', announce = true): boolean {
+  if (!valid()) {
+    if (announce) showActionValidation(`Fix the highlighted amount before ${action}.`);
+    return false;
+  }
+  const supplier = el<HTMLInputElement>('supplier');
+  supplier.setAttribute('aria-invalid', String(!current.supplier.trim()));
+  if (!current.supplier.trim()) {
+    if (announce) showActionValidation(`Enter the supplier before ${action}.`, supplier);
+    return false;
+  }
+  const unnamed = current.allocations.find((row) => !blankRow(row) && !row.description.trim());
+  if (unnamed) {
+    const rowIndex = current.allocations.indexOf(unnamed);
+    const field = document.querySelectorAll<HTMLInputElement>('.row-description')[rowIndex];
+    field?.setAttribute('aria-invalid', 'true');
+    if (announce) showActionValidation(`Name every cost row before ${action}.`, field);
+    return false;
+  }
+  document.querySelectorAll<HTMLInputElement>('.row-description').forEach((field) => field.removeAttribute('aria-invalid'));
+  return true;
+}
 function renderTotals(): void { const totals = summarize(current.totalCents, current.allocations), blocked = !valid(); el('billable-total').textContent = formatMoney(totals.billableCents, current.currency); el('overhead-total').textContent = formatMoney(totals.overheadCents, current.currency); el('split-total').textContent = formatMoney(totals.splitCents, current.currency); el('remaining-total').textContent = formatMoney(Math.abs(totals.remainingCents), current.currency); el('currency-prefix').textContent = new Intl.NumberFormat(undefined, { style: 'currency', currency: current.currency }).formatToParts(0).find((part) => part.type === 'currency')?.value || current.currency; const row = el('balance-row'); row.className = `balance-row ${!blocked && totals.balanced ? 'balanced' : !blocked && totals.remainingCents < 0 ? 'over' : ''}`; el('balance-label').textContent = blocked ? 'Fix invalid amount' : totals.balanced ? 'Balanced exactly' : totals.remainingCents < 0 ? 'Over-allocated' : 'Still to allocate'; el('balance-guidance').textContent = blocked ? 'Fix the highlighted amount before checking the split.' : totals.balanced ? 'Every cent of the supplier bill is accounted for.' : totals.remainingCents < 0 ? `Reduce rows by ${formatMoney(Math.abs(totals.remainingCents), current.currency)} to match the bill.` : current.totalCents ? `Allocate ${formatMoney(totals.remainingCents, current.currency)} more to match the bill.` : 'Enter the bill total and cost rows to check the split.'; }
 function updateSavedToggle(): void { const expanded = el('saved-toggle').getAttribute('aria-expanded') === 'true'; el('saved-toggle').childNodes[0].textContent = `${expanded ? 'Hide' : 'Show'} ${demo ? 'sample' : 'saved'} slips (`; }
 function renderSaved(): void { el('saved-count').textContent = String(saved.length); updateSavedToggle(); const box = el<HTMLDivElement>('saved-list'); box.replaceChildren(); if (!saved.length) { box.textContent = 'No saved slips yet. Your first balanced bill will appear here.'; return; } const list = document.createElement('ol'); list.className = 'saved-list'; saved.forEach((slip) => { const button = document.createElement('button'); button.type = 'button'; button.className = slip.id === current.id ? 'saved-slip active' : 'saved-slip'; button.innerHTML = `<strong></strong><span></span><small></small>`; button.querySelector('strong')!.textContent = slip.supplier || 'Untitled supplier'; button.querySelector('span')!.textContent = `${slip.reference || 'No reference'} · ${formatMoney(slip.totalCents, slip.currency)}`; button.querySelector('small')!.textContent = summarize(slip.totalCents, slip.allocations).balanced ? 'Balanced' : 'Draft'; button.addEventListener('click', () => void openSlip(slip.id)); const li = document.createElement('li'); li.append(button); list.append(li); }); box.append(list); }
-function changed(): void { current.updatedAt = now(); el('save-state').textContent = valid() ? 'Unsaved changes' : 'Fix invalid amount'; renderTotals(); clearTimeout(saveTimer); if (valid()) saveTimer = window.setTimeout(() => void saveCurrent(true), 700); }
-async function saveCurrent(silent = false): Promise<boolean> { if (!valid()) { if (!silent) showToast('Fix the highlighted amount before saving.'); return false; } if (!current.supplier.trim() && current.totalCents === 0 && current.allocations.every((row) => !row.description && !row.amountCents) && !current.attachment) { el('save-state').textContent = 'Not saved yet'; return false; } await putSlip(current); saved = await listSlips(); el('save-state').textContent = demo ? 'Saved in demo only' : 'Saved in this browser'; renderSaved(); if (!silent) showToast(demo ? 'Sample change saved in demo only.' : 'Slip saved in this browser.'); return true; }
-async function openSlip(id: string): Promise<void> { const slip = await getSlip(id); if (!slip) return; current = slip; revokeAttachmentUrl(); fillForm(); renderSaved(); el('split-workspace').scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth' }); }
+function setActiveSlipUrl(id?: string): void {
+  if (demo) return;
+  const url = new URL(location.href);
+  url.searchParams.delete('new');
+  if (id) url.searchParams.set('slip', id); else url.searchParams.delete('slip');
+  history.replaceState(history.state, '', `${url.pathname}${url.search}${url.hash}`);
+}
+function newWorkspaceUrl(): void {
+  if (demo) return;
+  const url = new URL(location.href);
+  url.searchParams.delete('slip');
+  url.searchParams.set('new', '1');
+  history.replaceState(history.state, '', `${url.pathname}${url.search}${url.hash}`);
+}
+function changed(): void { current.updatedAt = now(); clearActionValidation(); el('save-state').textContent = valid() ? 'Unsaved changes' : 'Fix invalid amount'; renderTotals(); clearTimeout(saveTimer); if (valid()) saveTimer = window.setTimeout(() => void saveCurrent(true), 700); }
+async function saveCurrent(silent = false): Promise<boolean> {
+  if (!validateSlipAction('saving', !silent)) { if (!silent) el('save-state').textContent = valid() ? 'Needs details' : 'Fix invalid amount'; return false; }
+  const slip = cleanSlip(current);
+  if (!slip.supplier && slip.totalCents === 0 && !slip.allocations.length && !slip.attachment) { if (!silent) showActionValidation('Enter the supplier before saving.', el<HTMLInputElement>('supplier')); el('save-state').textContent = 'Not saved yet'; return false; }
+  await putSlip(slip);
+  saved = await listSlips();
+  setActiveSlipUrl(current.id);
+  el('save-state').textContent = demo ? 'Saved in demo only' : 'Saved in this browser';
+  renderSaved();
+  if (!silent) showToast(demo ? 'Sample change saved in demo only.' : 'Slip saved in this browser.');
+  return true;
+}
+async function openSlip(id: string): Promise<void> { const slip = await getSlip(id); if (!slip) return; current = slip; setActiveSlipUrl(id); revokeAttachmentUrl(); fillForm(); renderSaved(); el('split-workspace').scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth' }); }
 function showToast(text: string, action?: string, callback?: () => void): void { const toast = el<HTMLDivElement>('toast'); clearTimeout(messageTimer); toast.replaceChildren(document.createTextNode(text)); if (action && callback) { const button = document.createElement('button'); button.type = 'button'; button.textContent = action; button.addEventListener('click', () => { callback(); toast.hidden = true; }); toast.append(button); } toast.hidden = false; messageTimer = window.setTimeout(() => { toast.hidden = true; }, 6000); }
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 function revokeAttachmentUrl(): void { if (attachmentUrl) URL.revokeObjectURL(attachmentUrl); attachmentUrl = ''; }
 async function handleAttachment(file?: File): Promise<void> { if (!file) return; if (file.size > 10_000_000) { showToast('That file is over 10 MB. Choose a smaller image or PDF.'); return; } if (!file.type.startsWith('image/') && file.type !== 'application/pdf') { showToast('Choose an image or PDF supplier bill.'); return; } current.attachment = { name: file.name, type: file.type, size: file.size }; await putAttachment(current.id, file); await saveCurrent(true); el('attachment-name').textContent = `${file.name} · ${formatBytes(file.size)}`; el<HTMLButtonElement>('view-attachment').hidden = false; el<HTMLButtonElement>('open-extraction').disabled = false; showToast(demo ? 'Supplier bill attached in demo only.' : 'Supplier bill attached in this browser.'); }
 async function viewAttachment(): Promise<void> { const file = await getAttachment(current.id); if (!file) { showToast('The attachment is missing. Attach it again.'); return; } revokeAttachmentUrl(); attachmentUrl = URL.createObjectURL(file); window.open(attachmentUrl, '_blank', 'noopener,noreferrer'); }
-function assertOutput(): boolean { if (!valid()) { showToast('Fix the highlighted amount before exporting.'); return false; } if (!summarize(current.totalCents, current.allocations).balanced) { showToast('Match the split to the bill total before exporting.'); return false; } return true; }
+function assertOutput(): boolean { if (!validateSlipAction('exporting')) return false; if (!summarize(current.totalCents, current.allocations).balanced) return showActionValidation('Match the split to the bill total before exporting.'); return true; }
 function closeExtraction(): void { const dialog = el<HTMLDialogElement>('extract-dialog'); if (dialog.open) dialog.close(); }
 function openExtraction(): void {
   if (!current.attachment) { showToast('Attach an image or PDF before extracting bill details.'); return; }
@@ -185,16 +249,16 @@ function applyExtraction(): void {
   closeExtraction();
   showToast('Bill details applied. Check every field.', 'Undo', () => { current = previous; invalidFields.clear(); fillForm(); changed(); });
 }
-function printClientLineList(): void { const sheet = document.createElement('pre'); sheet.className = 'client-print-sheet'; sheet.textContent = clientLineList(current); document.body.append(sheet); document.body.classList.add('printing-client'); const cleanup = () => { sheet.remove(); document.body.classList.remove('printing-client'); }; window.addEventListener('afterprint', cleanup, { once: true }); window.print(); window.setTimeout(cleanup, 1000); }
+function printClientLineList(): void { const sheet = document.createElement('pre'); sheet.className = 'client-print-sheet'; sheet.textContent = clientLineList(cleanSlip(current)); document.body.append(sheet); document.body.classList.add('printing-client'); const cleanup = () => { sheet.remove(); document.body.classList.remove('printing-client'); }; window.addEventListener('afterprint', cleanup, { once: true }); window.print(); window.setTimeout(cleanup, 1000); }
 function wireEvents(): void {
-  const bind = (id: string, key: 'supplier' | 'reference' | 'client') => el<HTMLInputElement>(id).addEventListener('input', (event) => { current[key] = (event.target as HTMLInputElement).value; if (key === 'reference') el('slip-number').textContent = current.reference || 'Draft'; changed(); });
+  const bind = (id: string, key: 'supplier' | 'reference' | 'client') => el<HTMLInputElement>(id).addEventListener('input', (event) => { current[key] = (event.target as HTMLInputElement).value; if (key === 'supplier') el<HTMLInputElement>('supplier').removeAttribute('aria-invalid'); if (key === 'reference') el('slip-number').textContent = current.reference || 'Draft'; changed(); });
   bind('supplier', 'supplier'); bind('reference', 'reference'); bind('client', 'client');
   el<HTMLInputElement>('bill-date').addEventListener('change', (event) => { current.billDate = (event.target as HTMLInputElement).value; changed(); });
   el<HTMLSelectElement>('currency').addEventListener('change', (event) => { current.currency = (event.target as HTMLSelectElement).value as Currency; changed(); });
   el<HTMLInputElement>('bill-total').addEventListener('input', (event) => setMoney(event.target as HTMLInputElement, 'total', (value) => { current.totalCents = value; }));
   document.getElementById('enter-bill')?.addEventListener('click', () => { el('split-workspace').scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth' }); el<HTMLInputElement>('supplier').focus({ preventScroll: true }); });
   el('add-row').addEventListener('click', () => { current.allocations.push(newRow()); renderRows(); changed(); document.querySelector<HTMLInputElement>('.allocation-row:last-child .row-description')?.focus(); });
-  el('new-slip').addEventListener('click', () => { current = newSlip(); invalidFields.clear(); revokeAttachmentUrl(); fillForm(); renderSaved(); el<HTMLInputElement>('supplier').focus(); });
+  el('new-slip').addEventListener('click', () => { current = newSlip(); newWorkspaceUrl(); invalidFields.clear(); revokeAttachmentUrl(); fillForm(); renderSaved(); el<HTMLInputElement>('supplier').focus(); });
   el('saved-toggle').addEventListener('click', () => { const archive = el<HTMLElement>('archive'); archive.hidden = !archive.hidden; el('saved-toggle').setAttribute('aria-expanded', String(!archive.hidden)); updateSavedToggle(); });
   el<HTMLInputElement>('attachment').addEventListener('change', (event) => void handleAttachment((event.target as HTMLInputElement).files?.[0]));
   el('view-attachment').addEventListener('click', () => void viewAttachment());
@@ -207,10 +271,10 @@ function wireEvents(): void {
   el<HTMLDialogElement>('extract-dialog').addEventListener('close', () => extractionOpener?.focus());
   if (!demo) el('remove-sociobot-key').addEventListener('click', () => { localStorage.removeItem(SOCIOBOT_KEY); el<HTMLInputElement>('sociobot-key').value = ''; el<HTMLButtonElement>('remove-sociobot-key').hidden = true; el('extract-status').textContent = 'The saved Sociobot key was removed.'; });
   el('save-slip').addEventListener('click', () => void saveCurrent());
-  el('export-csv').addEventListener('click', () => { if (assertOutput()) { downloadText(slipCsv(current), 'split-cost-slip.csv', 'text/csv;charset=utf-8'); showToast('CSV exported.'); } });
-  el('copy-client').addEventListener('click', () => { if (assertOutput()) void navigator.clipboard.writeText(clientLineList(current)).then(() => showToast('Client line list copied.')).catch(() => showToast('Clipboard is unavailable. Use Print client line list instead.')); });
+  el('export-csv').addEventListener('click', () => { if (assertOutput()) { downloadText(slipCsv(cleanSlip(current)), 'split-cost-slip.csv', 'text/csv;charset=utf-8'); showToast('CSV exported.'); } });
+  el('copy-client').addEventListener('click', () => { if (assertOutput()) void navigator.clipboard.writeText(clientLineList(cleanSlip(current))).then(() => showToast('Client line list copied.')).catch(() => showToast('Clipboard is unavailable. Use Print client line list instead.')); });
   el('print-client').addEventListener('click', () => { if (assertOutput()) printClientLineList(); });
-  el('delete-slip').addEventListener('click', () => void (async () => { if (!confirm(`Delete ${current.supplier || 'this slip'} and its attachment?`)) return; await deleteSlip(current.id); saved = await listSlips(); current = newSlip(); fillForm(); renderSaved(); showToast('Slip and attachment deleted.'); })());
+  el('delete-slip').addEventListener('click', () => void (async () => { if (!confirm(`Delete ${current.supplier || 'this slip'} and its attachment?`)) return; await deleteSlip(current.id); saved = await listSlips(); current = newSlip(); newWorkspaceUrl(); fillForm(); renderSaved(); showToast('Slip and attachment deleted.'); })());
   el('backup-export').addEventListener('click', () => void exportBackup().then((data) => downloadText(data, 'split-cost-slip-backup.json', 'application/json')));
   el<HTMLInputElement>('backup-import').addEventListener('change', (event) => void (async () => { try { const file = (event.target as HTMLInputElement).files?.[0]; if (!file) return; const count = await importBackup(await file.text()); saved = await listSlips(); renderSaved(); showToast(`${count} slips imported.`); } catch (error) { showToast(error instanceof Error ? error.message : 'Could not import that backup.'); } })());
   if (demo) { el('reset-demo').addEventListener('click', () => void resetDemo()); el('leave-demo').addEventListener('click', (event) => { event.preventDefault(); void resetDemoStorage().then(() => { location.href = '/?new=1'; }); }); }
@@ -219,5 +283,22 @@ function wireEvents(): void {
 async function resetDemo(): Promise<void> { await resetDemoStorage(); current = sampleSlip(); await putAttachment(current.id, sampleAttachment()); await putSlip(current); saved = await listSlips(); invalidFields.clear(); fillForm(); renderSaved(); showToast('Demo reset to the Sunrise Building Supply sample.'); }
 function updateConnection(): void { el('connection-text').textContent = navigator.onLine ? 'Online' : 'Offline — ready to keep working'; document.body.classList.toggle('is-offline', !navigator.onLine); }
 async function registerServiceWorker(): Promise<void> { if (!('serviceWorker' in navigator)) return; try { const hadController = Boolean(navigator.serviceWorker.controller); const registration = await navigator.serviceWorker.register('/sw.js'); registration.addEventListener('updatefound', () => { const worker = registration.installing; worker?.addEventListener('statechange', () => { if (worker.state === 'installed' && hadController) showToast('A fresh edition is ready.', 'Reload', () => location.reload()); }); }); await navigator.serviceWorker.ready; const shellAssets = [...document.querySelectorAll<HTMLScriptElement>('script[src]'), ...document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')].map((node) => node instanceof HTMLScriptElement ? node.src : node.href); const cache = await caches.open('split-cost-slip-v9'); await cache.addAll([location.pathname, ...shellAssets]); } catch { showToast('Offline setup is unavailable in this browser.'); } }
-async function init(): Promise<void> { if (!isAppRoute) { notFound(); return; } setStorageMode(demo); setMetadata(); shell(); wireEvents(); try { saved = await listSlips(); if (demo && !saved.length) { current = sampleSlip(); await putAttachment(current.id, sampleAttachment()); await putSlip(current); saved = await listSlips(); } else if (saved[0] && !new URL(location.href).searchParams.has('new')) current = saved[0]; } catch { showToast('Local storage could not be opened. Check private browsing or storage permissions.'); } fillForm(); renderSaved(); updateConnection(); focusHeading(demo ? 'Demo — Split Cost Slip' : 'Split Cost Slip'); void registerServiceWorker(); }
+async function init(): Promise<void> {
+  if (!isAppRoute) { notFound(); return; }
+  setStorageMode(demo); setMetadata(); shell(); wireEvents();
+  try {
+    saved = await listSlips();
+    if (demo) {
+      if (!saved.length) { current = sampleSlip(); await putAttachment(current.id, sampleAttachment()); await putSlip(current); saved = await listSlips(); }
+      else current = saved[0];
+    } else {
+      const params = new URL(location.href).searchParams;
+      const requested = params.get('slip');
+      const active = requested ? saved.find((slip) => slip.id === requested) : undefined;
+      if (active) current = active;
+      else if (saved[0] && !params.has('new')) current = saved[0];
+    }
+  } catch { showToast('Local storage could not be opened. Check private browsing or storage permissions.'); }
+  fillForm(); renderSaved(); updateConnection(); focusHeading(demo ? 'Demo — Split Cost Slip' : 'Split Cost Slip'); void registerServiceWorker();
+}
 void init();

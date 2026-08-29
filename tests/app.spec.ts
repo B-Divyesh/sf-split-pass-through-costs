@@ -23,6 +23,7 @@ test('@claim:demo-isolation opens a seeded isolated demo and reset restores it',
   await page.goto('/?new=1');
   await page.locator('#supplier').fill('REAL PRIVATE SUPPLIER');
   await page.locator('#bill-total').fill('10.00');
+  await page.locator('.row-description').first().fill('Private materials');
   await page.locator('.row-amount-input').first().fill('10.00');
   await page.locator('#save-slip').click();
   await expect(page.locator('#save-state')).toContainText('Saved');
@@ -196,6 +197,7 @@ test('@claim:manual-data-privacy keeps manual bill data in the browser', async (
   await page.locator('#supplier').fill('Private Supply Co');
   await page.locator('#reference').fill('PRIVATE-17');
   await page.locator('#bill-total').fill('20.00');
+  await page.locator('.row-description').first().fill('Private materials');
   await page.locator('.row-amount-input').first().fill('20.00');
   await page.locator('#save-slip').click();
   await downloadedText(page, async () => { await page.locator('#export-csv').click(); });
@@ -209,6 +211,7 @@ test('@claim:delete-slip-data deletes the saved slip and its attachment', async 
   await page.goto('/?new=1');
   await page.locator('#supplier').fill('Delete Me Supply');
   await page.locator('#bill-total').fill('12.00');
+  await page.locator('.row-description').first().fill('Delete me materials');
   await page.locator('.row-amount-input').first().fill('12.00');
   await page.locator('#attachment').setInputFiles({ name: 'delete-me.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF delete me') });
   await page.locator('#save-slip').click();
@@ -282,6 +285,62 @@ test('blocks stale invalid money from balance, saving, and export', async ({ pag
   await expect(page.locator('#toast')).toContainText('Fix the highlighted amount');
   await page.locator('#save-slip').click();
   await expect(page.locator('#save-state')).toContainText('Fix invalid amount');
+});
+
+test('rejects the verifier’s unnamed fresh bill, then omits its untouched zero row from saved and CSV output', async ({ page }) => {
+  await page.goto('/?new=1');
+  await page.locator('#bill-total').fill('25.00');
+  await page.locator('.row-amount-input').first().fill('25.00');
+  await page.locator('#save-slip').click();
+  await expect(page.locator('#validation-message')).toHaveText('Enter the supplier before saving.');
+  await expect(page.locator('#supplier')).toHaveAttribute('aria-invalid', 'true');
+  await page.locator('#export-csv').click();
+  await expect(page.locator('#validation-message')).toHaveText('Enter the supplier before exporting.');
+  await page.locator('#supplier').fill('Named Supplier');
+  await page.locator('#save-slip').click();
+  await expect(page.locator('#validation-message')).toHaveText('Name every cost row before saving.');
+  await expect(page.locator('.row-description').first()).toHaveAttribute('aria-invalid', 'true');
+  await page.locator('#export-csv').click();
+  await expect(page.locator('#validation-message')).toHaveText('Name every cost row before exporting.');
+  await page.locator('.row-description').first().fill('Safety boots');
+  await page.locator('#save-slip').click();
+  await expect(page.locator('#save-state')).toContainText('Saved');
+  await expect(page).toHaveURL(/\?slip=/);
+  const csv = await downloadedText(page, async () => { await page.locator('#export-csv').click(); });
+  expect(csvRows(csv)).toEqual([
+    ['Supplier', 'Supplier bill reference', 'Bill date', 'Client', 'Description', 'User-selected category', 'Treatment', 'Amount', 'Currency'],
+    ['Named Supplier', '', expect.any(String), '', 'Safety boots', '', 'Billable', '25.00', 'USD'],
+  ]);
+  expect(csv).not.toContain('\r\n,,,,');
+});
+
+test('shows a clear, announced validation response when an empty real slip is saved', async ({ page }) => {
+  await page.goto('/?new=1');
+  await page.locator('#save-slip').click();
+  await expect(page.locator('#validation-message')).toHaveText('Enter the supplier before saving.');
+  await expect(page.locator('#toast')).toHaveText('Enter the supplier before saving.');
+  await expect(page.locator('#supplier')).toBeFocused();
+  await expect(page.locator('#save-state')).toHaveText('Needs details');
+});
+
+test('restores the active saved slip after Start for real and a refresh', async ({ page }) => {
+  await page.goto('/demo');
+  await page.locator('#leave-demo').click();
+  await expect(page).toHaveURL(/\?new=1$/);
+  await page.locator('#supplier').fill('Refresh Restore Supply');
+  await page.locator('#reference').fill('RESTORE-25');
+  await page.locator('#bill-total').fill('18.00');
+  await page.locator('.row-description').first().fill('Replacement valve');
+  await page.locator('.row-amount-input').first().fill('18.00');
+  await page.locator('#attachment').setInputFiles({ name: 'restore.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF restore') });
+  await page.locator('#save-slip').click();
+  await expect(page.locator('#save-state')).toContainText('Saved');
+  await expect(page).toHaveURL(/\?slip=/);
+  await page.reload();
+  await expect(page.locator('#supplier')).toHaveValue('Refresh Restore Supply');
+  await expect(page.locator('#reference')).toHaveValue('RESTORE-25');
+  await expect(page.locator('#attachment-name')).toContainText('restore.pdf');
+  await expect(page.locator('#save-state')).toContainText('Saved');
 });
 
 test('rejects malformed imports atomically and remains usable after reload', async ({ page }) => {

@@ -4,7 +4,10 @@ export default defineConfig({
   testDir: './tests',
   testMatch: '**/*.spec.ts',
   fullyParallel: true,
-  workers: 4,
+  // Attachment-boundary coverage writes 10 MB blobs and reloads IndexedDB. Run
+  // the two browser projects serially so the committed gate stays reliable on
+  // the small clean-verification workers used for release checks.
+  workers: 1,
   retries: 0,
   reporter: 'line',
   use: {
