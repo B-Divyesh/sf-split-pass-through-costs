@@ -1,8 +1,9 @@
 import type { Allocation, Currency } from './types';
 
 export function parseMoney(value: string): number | null {
-  const cleaned = value.trim().replace(/,/g, '');
-  if (!/^\d+(?:\.\d{0,2})?$/.test(cleaned)) return null;
+  const trimmed = value.trim();
+  if (!/^(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{0,2})?$/.test(trimmed)) return null;
+  const cleaned = trimmed.replace(/,/g, '');
   const [whole, decimal = ''] = cleaned.split('.');
   const cents = Number(whole) * 100 + Number(decimal.padEnd(2, '0'));
   return Number.isSafeInteger(cents) ? cents : null;

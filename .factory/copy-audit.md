@@ -1,4 +1,4 @@
-# Copy audit — polish 5
+# Copy audit — repair 2
 
 Counts treat hyphenated terms as one word. Landing, demo, legal, and README copy has no sentence over 22 words and no banned marketing terms. Claims in the Result column are registered in `.factory/claims.json`.
 

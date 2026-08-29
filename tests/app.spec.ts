@@ -19,6 +19,17 @@ async function downloadedText(page: import('@playwright/test').Page, trigger: ()
 
 const csvRows = (text: string) => text.trim().split(/\r?\n/).map((line) => line.split(','));
 
+async function storedRecordCounts(page: import('@playwright/test').Page): Promise<{ slips: number; attachments: number }> {
+  return page.evaluate(async () => {
+    const request = indexedDB.open('split-cost-slip');
+    const db = await new Promise<IDBDatabase>((resolve, reject) => { request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
+    const count = (store: string) => new Promise<number>((resolve, reject) => { const item = db.transaction(store).objectStore(store).count(); item.onsuccess = () => resolve(item.result); item.onerror = () => reject(item.error); });
+    const result = { slips: await count('slips'), attachments: await count('attachments') };
+    db.close();
+    return result;
+  });
+}
+
 test('@claim:demo-isolation opens a seeded isolated demo and reset restores it', async ({ page }) => {
   await page.goto('/?new=1');
   await page.locator('#supplier').fill('REAL PRIVATE SUPPLIER');
@@ -57,7 +68,14 @@ test('@claim:split-export exports every seeded row with reference, category, amo
   ]);
 });
 
-test('@claim:attachment-boundary keeps image and PDF attachments through reload and rejects one byte over 10 MB', async ({ page }) => {
+test('@claim:attachment-boundary keeps an attachment-first draft plus image and PDF boundaries', async ({ page }) => {
+  await page.goto('/?new=1');
+  await page.locator('#attachment').setInputFiles({ name: 'first-input.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF first input') });
+  await expect(page.locator('#attachment-name')).toContainText('first-input.pdf');
+  await expect.poll(() => storedRecordCounts(page)).toEqual({ slips: 1, attachments: 1 });
+  await page.reload();
+  await expect(page.locator('#attachment-name')).toContainText('first-input.pdf');
+
   await expectBalancedDemo(page);
   await page.locator('#attachment').setInputFiles({ name: 'receipt.png', mimeType: 'image/png', buffer: Buffer.from([137, 80, 78, 71]) });
   await expect(page.locator('#attachment-name')).toContainText('receipt.png');
@@ -181,7 +199,7 @@ test('@claim:installable-app can be installed in supported Chromium browsers', a
   for (const icon of manifest.icons) expect((await page.request.get(icon.src)).ok()).toBeTruthy();
   await expectBalancedDemo(page);
   await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null)).toBeTruthy();
-  await expect.poll(() => page.evaluate(() => caches.keys())).toEqual(['split-cost-slip-v9']);
+  await expect.poll(() => page.evaluate(() => caches.keys())).toEqual(['split-cost-slip-v10']);
   const session = await context.newCDPSession(page);
   const result = await session.send('Page.getInstallabilityErrors');
   expect(result.installabilityErrors).toEqual([]);
@@ -209,26 +227,32 @@ test('@claim:manual-data-privacy keeps manual bill data in the browser', async (
 
 test('@claim:delete-slip-data deletes the saved slip and its attachment', async ({ page }) => {
   await page.goto('/?new=1');
-  await page.locator('#supplier').fill('Delete Me Supply');
-  await page.locator('#bill-total').fill('12.00');
-  await page.locator('.row-description').first().fill('Delete me materials');
-  await page.locator('.row-amount-input').first().fill('12.00');
   await page.locator('#attachment').setInputFiles({ name: 'delete-me.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF delete me') });
-  await page.locator('#save-slip').click();
+  await expect.poll(() => storedRecordCounts(page)).toEqual({ slips: 1, attachments: 1 });
+  await page.reload();
+  await expect(page.locator('#attachment-name')).toContainText('delete-me.pdf');
   page.once('dialog', (dialog) => dialog.accept());
   await page.locator('#delete-slip').click();
   await expect(page.locator('#toast')).toContainText('Slip and attachment deleted');
-  const counts = await page.evaluate(async () => {
-    const request = indexedDB.open('split-cost-slip');
-    const db = await new Promise<IDBDatabase>((resolve, reject) => { request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
-    const count = (store: string) => new Promise<number>((resolve, reject) => { const item = db.transaction(store).objectStore(store).count(); item.onsuccess = () => resolve(item.result); item.onerror = () => reject(item.error); });
-    const result = { slips: await count('slips'), attachments: await count('attachments') };
-    db.close();
-    return result;
-  });
-  expect(counts).toEqual({ slips: 0, attachments: 0 });
+  await expect.poll(() => storedRecordCounts(page)).toEqual({ slips: 0, attachments: 0 });
   await page.reload();
   await expect(page.locator('#supplier')).toHaveValue('');
+  await expect(page.locator('#attachment-name')).toHaveText('No attachment yet');
+});
+
+test('removes attachment orphans left by the previous release', async ({ page }) => {
+  await page.goto('/?new=1');
+  await page.evaluate(async () => {
+    const request = indexedDB.open('split-cost-slip');
+    const db = await new Promise<IDBDatabase>((resolve, reject) => { request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
+    const tx = db.transaction('attachments', 'readwrite');
+    tx.objectStore('attachments').put(new Blob(['legacy orphan'], { type: 'application/pdf' }), 'legacy-orphan');
+    await new Promise<void>((resolve, reject) => { tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error); });
+    db.close();
+  });
+  await expect.poll(() => storedRecordCounts(page)).toEqual({ slips: 0, attachments: 1 });
+  await page.reload();
+  await expect.poll(() => storedRecordCounts(page)).toEqual({ slips: 0, attachments: 0 });
 });
 
 test('@claim:bill-extraction returns editable details without choosing treatment', async ({ page }) => {
@@ -285,6 +309,21 @@ test('blocks stale invalid money from balance, saving, and export', async ({ pag
   await expect(page.locator('#toast')).toContainText('Fix the highlighted amount');
   await page.locator('#save-slip').click();
   await expect(page.locator('#save-state')).toContainText('Fix invalid amount');
+});
+
+test('rejects malformed comma grouping before balance, saving, and export', async ({ page }) => {
+  await page.goto('/?new=1');
+  await page.locator('#supplier').fill('Comma Test');
+  await page.locator('#bill-total').fill('1,2,3');
+  await page.locator('.row-description').first().fill('Materials');
+  await page.locator('.row-amount-input').first().fill('123');
+  await expect(page.locator('#bill-total')).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.locator('#balance-label')).toHaveText('Fix invalid amount');
+  await expect(page.locator('#balance-guidance')).toHaveText('Fix the highlighted amount before checking the split.');
+  await page.locator('#save-slip').click();
+  await expect(page.locator('#validation-message')).toHaveText('Fix the highlighted amount before saving.');
+  await page.locator('#export-csv').click();
+  await expect(page.locator('#validation-message')).toHaveText('Fix the highlighted amount before exporting.');
 });
 
 test('rejects the verifier’s unnamed fresh bill, then omits its untouched zero row from saved and CSV output', async ({ page }) => {
@@ -439,6 +478,7 @@ test('uses immutable caching only for versioned production assets', async ({ pag
   const config = JSON.parse(await readFile('public/staticwebapp.config.json', 'utf8')) as { routes: Array<{ route: string; headers?: Record<string, string> }> };
   const immutable = config.routes.filter((route) => route.headers?.['Cache-Control']?.includes('immutable'));
   expect(immutable.map((route) => route.route)).toEqual(['/assets/*']);
+  expect(await readdir('dist')).not.toContain('_headers');
 });
 
 test('names the saved-slip disclosure action and supports keyboard toggling', async ({ page }) => {

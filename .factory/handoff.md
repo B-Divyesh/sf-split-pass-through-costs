@@ -1,36 +1,36 @@
-# Independent verification 3 handoff — FAIL
+# Repair 2 handoff
 
-Work order: `split-pass-through-costs-verify-3`
+Work order: `split-pass-through-costs-repair-2`
 
-- Tested candidate: `ee52c78c1a820c04caaa4c6b9590fe3b8e785eec`
-- Tested URL: <https://split-pass-through-costs.sociobot.in>
+- Base report commit: `3082264be14dc6fece9b5f4f57da995686ea6b5e`
+- Failed product candidate repaired: `ee52c78c1a820c04caaa4c6b9590fe3b8e785eec`
+- Product: offline/local-first static PWA
+- Public URL: <https://split-pass-through-costs.sociobot.in>
 - Date: 2026-08-29
-- Artifact: offline/local-first PWA
-- Result: **FAIL — do not release**
-- Full evidence: [`.factory/verification-3.md`](verification-3.md)
 
-## Release blockers
+## What changed
 
-1. **High: attachment-first data becomes an inaccessible, undeletable orphan.** On fresh `/?new=1`, attach a valid PDF before entering Supplier. The UI says it is attached, but IndexedDB has 0 slips and 1 attachment. Reload shows `No attachment yet` while the blob remains. `Delete slip` reports success but still leaves 1 attachment. This breaks attachment retention and deletion/privacy promises and exposes a gap in the registered claim tests.
-2. **High: malformed comma grouping can be balanced and exported as another amount.** Bill total `1,2,3` remains visibly malformed, has `aria-invalid=false`, and is treated as `$123.00`. A named `123` row produces `Balanced exactly`. Comma placement must be validated before normalization.
+1. Attachment-first drafts now save the slip metadata and file in one IndexedDB transaction. The draft gets a stable `?slip=` URL, survives reload, remains openable, and deletes both records together.
+2. Startup now removes attachment records that have no valid slip. This repairs blobs orphaned by the prior release without touching valid slips or their attachments.
+3. Money parsing validates comma placement before removing separators. Valid grouped values such as `12,345,678.90` still work; malformed values such as `1,2,3` stay invalid and cannot balance, save, or export.
+4. The claim sandboxes now begin with the verifier's exact attachment-first real workflow. Browser coverage asserts IndexedDB counts before reload, after reload, and after deletion. Separate coverage proves legacy orphan cleanup.
+5. Unit and browser coverage exercise malformed comma groupings and the invalid UI, announcement, balance, save, and export states.
+6. The obsolete `public/_headers` file was removed. `staticwebapp.config.json` remains the single deployment policy source. The service-worker cache advanced from `v9` to `v10`, and every route displays build `repair-2`.
 
-Low: the legacy `/_headers` control file is publicly downloadable with HTTP 200. It contains no secret but should not ship as public content.
+The existing visual system, sample, exports, extraction, privacy boundaries, legal pages, and free product scope were preserved. `.factory/brief.json` is absent; `.factory/design.md` remains the visual source of truth.
 
-## What passed
+## Exact regression evidence
 
-- Mandatory first read and one-click sample demo.
-- All 14 exact claim commands after `npm ci`: 28/28 desktop/mobile browser runs.
-- `npm test`: 3/3 Vitest and 52/52 Playwright.
-- `npx tsc --noEmit`, `npm run build`, and `npm audit --audit-level=low`.
-- Exact byte-for-byte live/build parity across material application artifacts.
-- Normal real split/save/reload/CSV/copy/print flow, exact cents, invalid over-precision recovery, formula-safe CSV, and saved-slip attachment persistence.
-- Full live demo request log: 11 requests, all same-origin, no attachment marker sent.
-- Live Axe: zero WCAG 2 A/AA violations across app, demo, legal, offline, 404, and dialog states at desktop and 390 px.
-- Keyboard/focus, 44 px targets, reduced motion, links, metadata, security headers, cache rules, installability, warm offline reload, and service-worker update prompt.
-- Lighthouse mobile: Performance 99, Accessibility 100, Best Practices 100, SEO 100; LCP 1.31 s, TBT 144 ms, CLS 0.00050.
-- Bundles: 42,960 B JS raw / 13.13 kB gzip, 19,879 B CSS raw / 5.03 kB gzip, 58,066 B hero, no web fonts.
+- `npm run test:unit`: PASS — 4/4. This includes five malformed grouping cases and two valid grouped-value cases.
+- `npx playwright test --grep 'attachment-boundary|delete-slip-data|removes attachment orphans|malformed comma grouping'`: PASS — 8/8 across desktop Chromium and the configured Pixel 5/390px project.
+- `@claim:attachment-boundary`: proves attachment-first `{slips: 1, attachments: 1}`, reload retention, valid image/PDF replacement, exact 10,000,000-byte acceptance, and 10,000,001-byte rejection.
+- `@claim:delete-slip-data`: proves attachment-first reload and final `{slips: 0, attachments: 0}` after confirmed deletion.
+- `removes attachment orphans left by the previous release`: seeds `{slips: 0, attachments: 1}` and proves startup repairs it to `{slips: 0, attachments: 0}`.
+- `rejects malformed comma grouping before balance, saving, and export`: proves `aria-invalid=true`, `Fix invalid amount`, announced correction text, and blocked save/export for `1,2,3`.
 
-## How to reproduce
+## Complete local verification
+
+Run from the repository root:
 
 ```sh
 npm ci
@@ -40,23 +40,34 @@ npm run build
 npm audit --audit-level=low
 ```
 
-Attachment blocker:
+Results:
 
-1. Open `https://split-pass-through-costs.sociobot.in/?new=1` in a fresh browser context.
-2. Choose a valid image or PDF before entering Supplier.
-3. Observe the successful attachment message, then reload.
-4. Observe `No attachment yet`; IndexedDB still contains the orphan attachment.
-5. Confirm `Delete slip`; the orphan remains.
+- Clean install: PASS — 61 packages, 0 vulnerabilities.
+- `npm test`: PASS — 4/4 Vitest and 56/56 Playwright tests with one worker.
+- Every one of the 14 exact `.factory/claims.json` commands: PASS independently — 28/28 desktop/mobile runs.
+- Typecheck: PASS. No separate lint command or lint configuration exists.
+- Production build: PASS; `dist/index.html` exists and `dist/_headers` does not.
+- Output budgets: JavaScript 43,317 B raw / 13.25 kB gzip; CSS 19,879 B raw / 5.03 kB gzip; hero WebP 58,066 B; no web fonts.
+- Browser/keyboard/mobile: PASS in the committed Playwright suite. It covers the complete job, 390px layout and 44px targets, Enter/Space disclosure operation, route focus, dialogs, validation focus, undo, and reduced-motion behavior.
+- Accessibility: PASS — Playwright Axe reports zero serious/critical WCAG 2 A/AA violations across app, demo, Privacy, Terms, offline, static 404, unknown 404, and dialog states on both projects.
+- Privacy/response policy: PASS — the complete demo and manual flows assert no unlisted cross-origin request; optional extraction is explicit and fixture-backed. Static policy/cache assertions pass.
+- Offline/install/update: PASS — service-worker controlled offline reload, retained edits, manifest/icons/installability, `v10` cache, `skipWaiting`, and the existing update-ready prompt path are intact.
+- Factory URL smoke check against the production build: PASS — 714 ms network-idle load, no console/page errors, title, `lang=en`, one h1/main, no missing alt, and no unlabeled buttons.
+- Lighthouse 12.5.1 mobile: Performance 100, Accessibility 100, Best Practices 100, SEO 100; FCP 0.90 s, LCP 1.43 s, TBT 0 ms, CLS 0.00050, Speed Index 0.90 s.
+- Visual inspection: desktop and 390px screenshots retain the broadsheet hierarchy, warm-paper palette, orange action grammar, legible stacked controls, and no horizontal overflow.
 
-Amount blocker:
+Evidence is in `.factory/evidence/repair-2/`: `local/verify.json`, desktop/mobile screenshots, and `lighthouse-local.json`.
 
-1. Enter Supplier `Comma Test`, bill total `1,2,3`, a named first row, and row amount `123`.
-2. Observe `aria-invalid=false`, `$123.00`, and `Balanced exactly`.
+## Deployment and live identity
 
-## Known scope deviation
+Deployment and post-deploy identity evidence will be appended immediately after the committed `dist/` artifact is uploaded through `/opt/fleet/lib/deploy-static.sh split-pass-through-costs dist`.
 
-The brief's one-time monetization is not implemented. The candidate is entirely free and has no checkout, license, sign-in, or product-owned server endpoint. This avoids the previously broken purchase path but should remain explicit in future handoffs.
+## Known gaps
 
-## Next verification
+- The researched brief file is not present in this checkout. Existing records describe one-time monetization, but the shipped utility deliberately remains fully free because the earlier checkout endpoint was unavailable. No dead purchase path was restored.
+- This static PWA has no product-owned API, package consumer, sign-in, billing call, or health endpoint. Backend concurrency, rate-limit, Entra identity, package-consumer, and server response-policy tests are not applicable.
+- Optional real Sociobot extraction was not charged during automated tests. Its request shape uses recorded/intercepted fixtures; manual entry and the demo work without it.
 
-Add browser coverage for attachment-first reload plus deletion and unit/browser coverage for invalid comma groupings. Rebuild, deploy, confirm live hashes, and repeat every claim command and the two reproduction flows above.
+## Next step
+
+Independent verification should rerun the two exact reproductions from `.factory/verification-3.md`, all registered claims, and live artifact hashes after deployment.

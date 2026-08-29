@@ -1,4 +1,4 @@
-const VERSION = 'split-cost-slip-v9';
+const VERSION = 'split-cost-slip-v10';
 const SHELL = [
   '/', '/?v=1', '/demo', '/offline.html', '/manifest.webmanifest', '/assets/hero-broadsheet-13629612.webp',
   '/icons/icon.svg', '/icons/icon-192.png', '/icons/apple-touch-icon.png', '/icons/icon-512.png', '/icons/icon-512-maskable.png',
