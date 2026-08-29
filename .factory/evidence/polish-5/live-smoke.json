@@ -1,0 +1,114 @@
+{
+  "routes": {
+    "/": {
+      "status": 200,
+      "title": "Split Cost Slip — split billable and overhead costs",
+      "titleMatches": true,
+      "h1": "SPLIT ONE BILL INTO BILLABLE AND OVERHEAD COSTS.",
+      "h1Focused": true,
+      "lang": "en",
+      "mainCount": 1,
+      "axeViolations": 0,
+      "undersizedTargets": []
+    },
+    "/demo": {
+      "status": 200,
+      "title": "Demo — Split Cost Slip",
+      "titleMatches": true,
+      "h1": "SUNRISE BUILDING SUPPLY",
+      "h1Focused": true,
+      "lang": "en",
+      "mainCount": 1,
+      "axeViolations": 0,
+      "undersizedTargets": []
+    },
+    "/privacy/": {
+      "status": 200,
+      "title": "Privacy — Split Cost Slip",
+      "titleMatches": true,
+      "h1": "CONTROL WHAT LEAVES YOUR BROWSER.",
+      "h1Focused": true,
+      "lang": "en",
+      "mainCount": 1,
+      "axeViolations": 0,
+      "undersizedTargets": []
+    },
+    "/terms/": {
+      "status": 200,
+      "title": "Terms — Split Cost Slip",
+      "titleMatches": true,
+      "h1": "A BILL SPLITTER, NOT AN ACCOUNTANT.",
+      "h1Focused": true,
+      "lang": "en",
+      "mainCount": 1,
+      "axeViolations": 0,
+      "undersizedTargets": []
+    },
+    "/offline.html": {
+      "status": 200,
+      "title": "Offline — Split Cost Slip",
+      "titleMatches": true,
+      "h1": "KEEP WORKING WITHOUT A CONNECTION.",
+      "h1Focused": true,
+      "lang": "en",
+      "mainCount": 1,
+      "axeViolations": 0,
+      "undersizedTargets": []
+    },
+    "/404.html": {
+      "status": 200,
+      "title": "Page not found — Split Cost Slip",
+      "titleMatches": true,
+      "h1": "WE CANNOT FIND THIS PAGE.",
+      "h1Focused": true,
+      "lang": "en",
+      "mainCount": 1,
+      "axeViolations": 0,
+      "undersizedTargets": []
+    },
+    "/round-5-missing": {
+      "status": 404,
+      "title": "Page not found — Split Cost Slip",
+      "h1Focused": true,
+      "axeViolations": 0
+    }
+  },
+  "demo": {
+    "url": "https://split-pass-through-costs.sociobot.in/?demo=1",
+    "banner": "Demo — sample data, nothing is saved · Sample records use separate browser storage. · Reset demo · Start for real",
+    "sampleSupplier": "Sunrise Building Supply",
+    "sampleBalance": "Balanced exactly",
+    "resetSupplier": "Sunrise Building Supply",
+    "realSupplierAfterDemo": "LIVE POLISH FIVE REAL SUPPLIER",
+    "cacheKeys": [
+      "split-cost-slip-v9"
+    ],
+    "offlineHeading": "SUNRISE BUILDING SUPPLY",
+    "offlineStatus": "OFFLINE — READY TO KEEP WORKING"
+  },
+  "coldRead": {
+    "mobile": {
+      "h1": "SPLIT ONE BILL INTO BILLABLE AND OVERHEAD COSTS.",
+      "audience": "For contractors who need to separate client costs from their own overhead.",
+      "actionVisible": true,
+      "overflowFree": true
+    },
+    "desktop": {
+      "h1": "SPLIT ONE BILL INTO BILLABLE AND OVERHEAD COSTS.",
+      "audience": "For contractors who need to separate client costs from their own overhead.",
+      "actionVisible": true,
+      "overflowFree": true
+    }
+  },
+  "normalConsoleErrors": [],
+  "outsideRequests": [],
+  "notFound": {
+    "eyebrow": "PAGE NOT FOUND",
+    "heading": "WE CANNOT FIND THIS PAGE.",
+    "body": "Check the address, return home, or open the sample.",
+    "actions": [
+      "Return home",
+      "Open the demo"
+    ]
+  }
+}
