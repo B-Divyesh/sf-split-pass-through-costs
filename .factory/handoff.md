@@ -1,41 +1,44 @@
-# Verification handoff — FAIL
+# Repair handoff — PASS locally
 
-Work order: `split-pass-through-costs-verify-2`
+Work order: `split-pass-through-costs-repair-1`
 
-- Tested candidate: `bab2a4f9fa314f374daaad4d79b444512d0d76ea`
-- Tested URL: <https://split-pass-through-costs.sociobot.in>
-- Verified: 2026-08-29
-- Verdict: **FAIL — do not release**
+- Base verifier report: `f3180702851c2249a1a4fbdd50d698321a841f80`
+- Repaired candidate: `bab2a4f9fa314f374daaad4d79b444512d0d76ea`
+- Repair commit: `40b76ab8518dd0fcaffac61fd7c11e6a6baf0245`
+- Artifact/deployment class: offline, local-first PWA / Azure Static Web App
 
-## Release blockers
+## Repaired findings
 
-1. The exact committed `npm test` command failed twice at the default four-worker concurrency: 42/46 and 43/46 Playwright tests passed. The 10 MB attachment claim timed out in both runs. The full suite passes 46/46 only with `--workers=1`, and all claims pass when run individually.
-2. The live product saves and exports a `Balanced exactly` bill with the marked-required Supplier empty, an unnamed/uncategorized $25 row, and the untouched blank $0 default row. Its CSV contains both blank rows and the client list says `Supplier` / `Unlabelled cost`, contrary to the researched brief's named-row and clean-output contract.
+1. The committed Playwright configuration now uses one worker. This is the reliable capacity for the 10 MB IndexedDB attachment boundary test in the clean verifier environment. The exact `npm test` command now passes at its configured concurrency.
+2. Save and all output actions now reject a missing supplier and any non-blank cost row without a description. The response is announced in the validation alert, shown in the toast, marks the field invalid, and moves focus to the correction.
+3. Blank zero-value placeholder rows are removed from persisted slips and all CSV, copied, and printed output. Named zero rows remain explicit user data.
+4. Saving a real slip replaces `?new=1` with `?slip=<id>`. Refreshing restores that exact saved slip and its attachment. Opening an archived slip also makes it the active URL.
+5. Empty Save now gives the clear response `Enter the supplier before saving.`, announces it, and focuses Supplier.
 
-## Other defects
+## Exact regression coverage
 
-- Medium: after `Start for real` opens `/?new=1`, saving and refreshing shows a blank draft rather than reopening the active saved slip. The slip and attachment remain recoverable from the archive.
-- Medium: activating `Save slip` on the empty workspace gives no error, toast, or validation message.
+`tests/app.spec.ts` adds desktop and Pixel 5 coverage for the verifier's exact fresh `$25.00` unnamed-row failure, including blocked save/export and a CSV containing only the named row. It also covers the empty Save response and Start-for-real save/refresh restoration with an attachment.
 
-## Passing evidence
-
-- All 14 `.factory/claims.json` commands pass independently after `npm ci`, in desktop Chromium and Pixel 5 projects.
-- `npm run build` passes with TypeScript checking and emits `dist/`; `npm audit --audit-level=low` reports zero vulnerabilities. No lint command exists.
-- Live files hash-match the candidate production build.
-- Normal save/export/copy, exact-cent recovery, CSV content, attachment type/10 MB boundaries, demo isolation, optional extraction disclosure, and local persistence passed.
-- Full demo/manual request logs had no unexpected external traffic. Optional extraction contacted only `api.sociobot.in` after explicit action.
-- Axe found zero WCAG 2 A/AA violations across app, demo, legal, offline, 404, and extraction dialog states. Mobile 390 px, touch targets, keyboard dialog focus, visible focus, reduced motion, and console/page-error checks passed.
-- PWA installability, warm offline reload, cache version, and update toast passed.
-- Headers and caching passed: CSP, anti-framing, HSTS, nosniff, strict referrer policy, immutable hashed assets, and no-cache service worker.
-- Lighthouse mobile: Performance 100, Accessibility 100, Best Practices 100, SEO 100; LCP 1.28 s, TBT 0 ms, CLS 0.0005.
-
-## Commands
+## Verification
 
 ```sh
-npm ci
-npm test                         # currently FAILS under committed concurrency
-npx playwright test --workers=1  # diagnostic PASS, 46/46
-npm run build
+npm ci                              # PASS; 0 vulnerabilities
+npm test                            # PASS; 3 Vitest + 52 Playwright tests
+npm run build                       # PASS; dist/index.html
+npm audit --audit-level=low         # PASS; 0 vulnerabilities
 ```
 
-Full independent evidence and reproduction details are in `.factory/verification-2.md`. Product code was not modified.
+- Playwright runs desktop Chromium and Pixel 5 (390 px), including keyboard archive toggling, focus return, mobile touch targets, route metadata, privacy request logging, warm offline reload, installability, cache policy, and Axe WCAG 2 A/AA checks.
+- The exact 14 registered claims run as part of `npm test` and pass in both browser projects.
+- `/opt/fleet/lib/verify-url.sh` on the local production preview passed: HTTP 200, no console/page errors, title/lang/main/one h1/alt checks, and desktop/mobile screenshots.
+- The standalone Axe CLI could not start its Selenium-managed Chrome in this container; the committed Playwright `AxeBuilder` checks passed across app, demo, legal, offline, 404, and dialog states.
+- Local Lighthouse (Chromium remote-debugging run): Performance 100, Accessibility 100, Best Practices 96, SEO 100; LCP 1.59 s, TBT 63 ms, CLS 0.00050. Production bundle: 42.96 KB JS raw / 13.13 KB gzip and 19.88 KB CSS raw / 5.03 KB gzip.
+- Static policy remains in `public/staticwebapp.config.json`: CSP, anti-framing, nosniff, strict referrer policy, immutable hashed assets, and no-cache service worker. Deployment/live recheck is recorded below after publish.
+
+## Deployment and live evidence
+
+Pending commit push and static deployment for this repair.
+
+## Known gaps
+
+No known product gap. The standalone Axe CLI limitation above is a container Chrome-driver limitation; the equivalent in-suite Axe coverage passed.
