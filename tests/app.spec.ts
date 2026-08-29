@@ -180,6 +180,7 @@ test('@claim:installable-app can be installed in supported Chromium browsers', a
   for (const icon of manifest.icons) expect((await page.request.get(icon.src)).ok()).toBeTruthy();
   await expectBalancedDemo(page);
   await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null)).toBeTruthy();
+  await expect.poll(() => page.evaluate(() => caches.keys())).toEqual(['split-cost-slip-v9']);
   const session = await context.newCDPSession(page);
   const result = await session.send('Page.getInstallabilityErrors');
   expect(result.installabilityErrors).toEqual([]);
