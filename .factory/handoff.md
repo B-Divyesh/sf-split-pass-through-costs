@@ -1,46 +1,41 @@
-# Handoff — polish 5
+# Verification handoff — FAIL
 
-Work order: `split-pass-through-costs-polish-5`
+Work order: `split-pass-through-costs-verify-2`
 
-Product commit deployed: `ebf8a342470697cf80f5557ce6a3107d6c7bbe7c`
+- Tested candidate: `bab2a4f9fa314f374daaad4d79b444512d0d76ea`
+- Tested URL: <https://split-pass-through-costs.sociobot.in>
+- Verified: 2026-08-29
+- Verdict: **FAIL — do not release**
 
-Live URL: <https://split-pass-through-costs.sociobot.in>
+## Release blockers
 
-## Delivered
+1. The exact committed `npm test` command failed twice at the default four-worker concurrency: 42/46 and 43/46 Playwright tests passed. The 10 MB attachment claim timed out in both runs. The full suite passes 46/46 only with `--workers=1`, and all claims pass when run individually.
+2. The live product saves and exports a `Balanced exactly` bill with the marked-required Supplier empty, an unnamed/uncategorized $25 row, and the untouched blank $0 default row. Its CSV contains both blank rows and the client list says `Supplier` / `Unlabelled cost`, contrary to the researched brief's named-row and clean-output contract.
 
-- Replaced metaphorical 404 wording in both static and SPA fallback routes with the exact literal copy required by F-5-1.
-- Added exact 404 copy, recovery-action, focus, Back, and Forward assertions.
-- Updated every route's visible build marker to `polish-5`.
-- Advanced and aligned the page/service-worker cache to `split-cost-slip-v9`; the install claim rejects stale cache names.
-- Updated the catalog line to a 12-word, 88-character, verb-first description.
-- Preserved the job-cost broadsheet design and the existing PWA/offline deployment class.
-- Recorded every review finding and its current evidence in `.factory/polish-5.md`.
+## Other defects
 
-## Exact verification
+- Medium: after `Start for real` opens `/?new=1`, saving and refreshing shows a blank draft rather than reopening the active saved slip. The slip and attachment remain recoverable from the archive.
+- Medium: activating `Save slip` on the empty workspace gives no error, toast, or validation message.
 
-- Final clean clone: `/tmp/split-polish5-final-clean.r6Uxfz/repo` at `ebf8a342470697cf80f5557ce6a3107d6c7bbe7c`.
-- `npm ci`: PASS, zero vulnerabilities.
-- All 14 exact `.factory/claims.json` commands: PASS independently in Chromium and Pixel 5.
-- `npm test`: PASS — 3 Vitest tests and 46 Playwright tests.
-- `npm run build`: PASS — `dist/index.html`; JavaScript 41.04 kB raw / 12.64 kB gzip; CSS 19.88 kB raw / 5.03 kB gzip.
-- Axe: zero WCAG 2 A/AA violations on root, demo, Privacy, Terms, Offline, static 404, and a true unknown route.
-- Lighthouse local production build: Performance 100, Accessibility 100, Best Practices 100, SEO 100; LCP 1.44 s, CLS 0.0005, TBT 0 ms.
-- Factory verifier: live HTTP 200, correct title/lang/h1/main/alt/labels, and zero console errors.
-- Live unknown route: HTTP 404, title `Page not found — Split Cost Slip`, focused `We cannot find this page.`, exact recovery copy and actions.
-- Live demo: seed/reset/real-data isolation PASS; warm offline reload PASS; only `split-cost-slip-v9` exists; zero other-origin requests.
-- Live headers: CSP, `X-Frame-Options: DENY`, nosniff, strict referrer policy; hashed JS immutable; worker no-cache.
-- Deployment: Azure Static Web Apps production deployment `35126c96-fe11-4d43-a5a4-90e01f3f600c` succeeded; custom domain returned 200.
+## Passing evidence
 
-Evidence is in `.factory/evidence/polish-5/`, including local/live screenshots, verifier reports, the live smoke report, and Lighthouse JSON.
+- All 14 `.factory/claims.json` commands pass independently after `npm ci`, in desktop Chromium and Pixel 5 projects.
+- `npm run build` passes with TypeScript checking and emits `dist/`; `npm audit --audit-level=low` reports zero vulnerabilities. No lint command exists.
+- Live files hash-match the candidate production build.
+- Normal save/export/copy, exact-cent recovery, CSV content, attachment type/10 MB boundaries, demo isolation, optional extraction disclosure, and local persistence passed.
+- Full demo/manual request logs had no unexpected external traffic. Optional extraction contacted only `api.sociobot.in` after explicit action.
+- Axe found zero WCAG 2 A/AA violations across app, demo, legal, offline, 404, and extraction dialog states. Mobile 390 px, touch targets, keyboard dialog focus, visible focus, reduced motion, and console/page-error checks passed.
+- PWA installability, warm offline reload, cache version, and update toast passed.
+- Headers and caching passed: CSP, anti-framing, HSTS, nosniff, strict referrer policy, immutable hashed assets, and no-cache service worker.
+- Lighthouse mobile: Performance 100, Accessibility 100, Best Practices 100, SEO 100; LCP 1.28 s, TBT 0 ms, CLS 0.0005.
 
-## Run
+## Commands
 
 ```sh
 npm ci
-npm test
+npm test                         # currently FAILS under committed concurrency
+npx playwright test --workers=1  # diagnostic PASS, 46/46
 npm run build
 ```
 
-## Known gaps and next steps
-
-None. No review finding, claim gap, or deployment defect remains.
+Full independent evidence and reproduction details are in `.factory/verification-2.md`. Product code was not modified.
